@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def FrankeFunction(x,y):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -11,7 +12,9 @@ def FrankeFunction(x,y):
 def generate_data_noise():
     # Makes meshgrid of x,y in the range between 0 and 1
     # returns a vector z with an added normal distribution with z_0 = 0, sigma = 1
-    x = np.arrange(0,1,0.05)
-    y = np.arrange(0,1,0.05)
+    x = np.arange(0,1,0.05)
+    y = np.arange(0,1,0.05)
     x,y = np.meshgrid(x,y)
-    return = FrankeFunction(x,y) + np.random.normal()
+    z = FrankeFunction(x,y) + np.random.normal()
+
+    return z
