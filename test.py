@@ -6,7 +6,7 @@ import numpy as np
 from random import random, seed
 
 fig = plt.figure()
-ax = fig.gca(projection='3d')
+ax = Axes3D(fig)
 
 # Make data.
 x = np.arange(0, 1, 0.05)
