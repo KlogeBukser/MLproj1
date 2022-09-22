@@ -7,7 +7,16 @@ from calculate import *
 from poly_funcs import *
 
 x,z = generate_data_Franke()
-funcs = [poly200,poly210,poly201,poly220,poly202,poly211]
-X = calc_design(x,funcs)
-beta = find_coeffs(X,z)
-print(beta)
+
+poly_deg = np.arange(1,6,1)
+R2_vals = np.zeros(5)
+for deg in poly_deg:
+    funcs = get_2D_pols(deg)
+    X = calc_design(x,funcs)
+    beta = find_coeffs(X,z)
+    z_ = get_model(X,beta)
+    R2_vals[deg-1] = R2(z,z_)
+
+
+plt.plot(poly_deg,R2_vals)
+plt.show()
