@@ -1,25 +1,26 @@
 import numpy as np
 
 
-def MSE(y,y_,scale = True):
-    n = len(y)
-    square = sum([(y[i] - y_[i])**2 for i in range(n)])
-    if (scale):
-        return square/n
-    return square
+def sq_diff(a,b):
+    return sum([(a[i] - b[i])**2 for i in range(len(a))])
 
+def MSE(y,y_):
+    n = len(y)
+    return sq_diff(y,y_)/n
 
 def R2(y,y_):
     n = len(y)
     avg = np.ones(n)*np.mean(y)
-    return 1 - MSE(y,y_,False)/MSE(y,avg,False)
+    return 1 - sq_diff(y,y_)/sq_diff(y,avg)
 
 
 
 """
 Linear algebra objects
 """
-def get_model(X,beta):
+def get_model(X,y):
+
+    beta = find_coeffs(X,y)
     return np.dot(X,beta)
 
 def find_coeffs(X,y):
@@ -34,14 +35,14 @@ def find_coeffs(X,y):
         print("You dun goofed")
 
 
-def calc_design(x,functions):
+def calc_design(vars,functions):
 
-    n = x.shape[0]
+    n = vars.shape[0]
     n_funcs = len(functions)
     design = np.ones((n, n_funcs))
 
     for i in range(n):
         for j in range(n_funcs):
-            design[i,j] = functions[j](x[i])
+            design[i,j] = functions[j](vars[i])
 
     return design
