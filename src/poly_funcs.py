@@ -1,13 +1,12 @@
 import numpy as np
 
-# Polynomials
-# Naming convention is (poly)(variables)(exponent for each variable)
-# This should be possible to generalise
 def get_2D_pols(deg):
-    """This thing makes every 2D polynomial for up to a given degree"""
-    poll_list = [[(lambda x, i = i, j = j : x[0]**(j - i) * x[1]**i) for i in range(j + 1)] for j in range(deg + 1)]
+    # Produces every polynomial of two variables up to a given degree
+    # Functions take a tuple as input
+    # i = i and j = j are necessary to prevent lambda functions from overwriting themselves
     pols = []
-    for elem_list in poll_list:
-        for elem in elem_list:
-            pols.append(elem)
+    for j in range(deg + 1):
+        # Outer loop iterates over polynomial degrees
+        # Inner loop iterates over polynomials of the degree in the outer loop
+        pols += [(lambda xy, i = i, j = j: xy[0]**(j - i) * xy[1]**i) for i in range(j + 1)]
     return pols
