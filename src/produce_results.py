@@ -39,10 +39,15 @@ def prod_score_plots(feature_values, label_values, max_poly = 5, include_MSE = T
     if (include_beta):
         title_axlabs("beta values when adding more features","Features","beta")
         plt.legend()
-        plt.show()
+        plt.savefig("plots/beta.pdf")
+        plt.close()
 
     if (include_R2):
         simple_plot(poly_degs,R2_vals, "R$^2$", "polynomial degree", "Score")
+        plt.savefig("plots/R2.pdf")
+        plt.close()
 
     if (include_MSE):
         simple_plot(poly_degs,MSE_vals,"Mean Squared Error", "polynomial degree", "Score")
+        plt.savefig("plots/MSE.pdf")
+        plt.close()
