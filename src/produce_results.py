@@ -19,8 +19,8 @@ def prod_score_plots(feature_values, label_values, max_poly = 5, include_MSE = T
     for i,deg in enumerate(poly_degs):
 
         funcs = get_2D_pols(deg)
-        X = calc_design(feature_values,funcs)
-        X_train, X_test, z_train, z_test = split_scale(feature_values,label_values)
+        design = calc_design(feature_values,funcs)
+        X_train, X_test, z_train, z_test = split_scale(design,label_values)
         z_tilde = get_model(X_train,z_train)
         R2_vals[i] = R2(z_train,z_tilde)
         MSE_vals[i] = MSE(z_train,z_tilde)
