@@ -9,18 +9,18 @@ def FrankeFunction(x,y):
     term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
     return term1 + term2 + term3 + term4
 
-def generate_Franke_noise(x,scale = 1):
-    # returns a vector z with an added normal distribution with z_0 = 0, sigma = 1
-    z = FrankeFunction(x[:,0],x[:,1])
-    noise = scale*np.random.randn(x.shape[0])
-    return z + noise
 
-def generate_data_Franke(n = 20):
+
+def generate_data_Franke(n = 20, noise_strength = 1):
+    # Produces feature values
+    # Gives noise to label values
+    
     x = np.zeros((n**2,2))
-    #y = np.zeros(n**2)
     vals = np.arange(0,1,0.05)
     for i in range(n):
         x[i*n:(i+1)*n,0] = vals
         x[i::n,1] = vals
 
-    return x, generate_Franke_noise(x)
+    z = FrankeFunction(x[:,0],x[:,1]) + noise_strength*np.random.randn(x.shape[0])
+
+    return x, z
