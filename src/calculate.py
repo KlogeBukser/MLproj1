@@ -18,12 +18,10 @@ def R2(y,y_):
 """
 Linear algebra objects
 """
-def get_model(X,y):
-
-    beta = find_coeffs(X,y)
+def get_model(X,beta):
     return np.dot(X,beta)
 
-def find_coeffs(X,y):
+def find_beta(X,y):
     # Finds beta
     square = np.dot(X.T,X)                      #nf*nf
     if (np.linalg.det(square) != 0):
