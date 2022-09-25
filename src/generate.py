@@ -11,16 +11,16 @@ def FrankeFunction(x,y):
 
 
 
-def generate_data_Franke(n = 20, noise_strength = 1):
+def generate_data_Franke(n = 20, noise = 1):
     # Produces feature values
     # Gives noise to label values
-    
+
     x = np.zeros((n**2,2))
-    vals = np.arange(0,1,0.05)
+    vals = np.arange(0,1,1/n)
     for i in range(n):
         x[i*n:(i+1)*n,0] = vals
         x[i::n,1] = vals
 
-    z = FrankeFunction(x[:,0],x[:,1]) + noise_strength*np.random.randn(x.shape[0])
+    z = FrankeFunction(x[:,0],x[:,1]) + noise*np.random.randn(x.shape[0])
 
     return x, z

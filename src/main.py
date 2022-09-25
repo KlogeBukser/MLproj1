@@ -5,6 +5,8 @@ import pandas as pd
 from generate import *
 from produce_results import *
 
-x,z = generate_data_Franke()
+np.random.seed(2022)
 
-prod_score_plots(x, z, max_poly = 5,include_R2 = True, include_MSE = True)
+x, z = generate_data_Franke(20,noise = 0.5)
+
+plot_MSE(x,z,8)

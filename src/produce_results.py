@@ -1,11 +1,48 @@
+
+
 from plotting import *
 from calculate import *
 from poly_funcs import *
 from transform import *
+from model import *
 
 import numpy as np
+from sklearn.model_selection import train_test_split
 
-def prod_score_plots(feature_values, label_values, max_poly = 5, include_MSE = True, include_R2 = True, include_beta = True, features_beta = True):
+
+def plot_MSE(x, z, max_poly = 5):
+    # Makes models for every polynomial degree uo tp the given degree
+
+    MSE_pred = np.zeros(max_poly + 1)
+    model = Model(max_poly)
+    X = model.design(x)
+
+    X_train, X_test, z_train, z_test = train_test_split(X,z)
+
+    degs = range(max_poly + 1)
+    n_boots = 100
+    while (True):
+
+        deg = model.get_polydeg()
+        for i in range(n_boots):
+            X_boot, z_boot = bootstrap(X_train,z_train)
+            model.fit(X_boot, z_boot)
+            z_pred = model.predict(X_test)
+            MSE_pred[deg] += MSE(z_test, z_pred)
+
+        # Stops the loop when the model complexity cannot be reduced further
+        if not(model.reduce_complexity()):
+            break
+
+    MSE_pred /= n_boots
+
+    simple_plot(degs, MSE_pred, "Mean Squared Error", "polynomial degree", "Score")
+    plt.savefig("plots/MSE.pdf")
+    plt.show()
+
+"""
+
+def prod_score_plots(x, z, max_poly = 5, include_MSE = True, include_R2 = True, include_beta = True, features_beta = True):
     # (x,y) = input
     # z = output
     # Produces plot(s) for measuring quality of 2D polynomial model
@@ -21,10 +58,10 @@ def prod_score_plots(feature_values, label_values, max_poly = 5, include_MSE = T
     for i,deg in enumerate(poly_degs):
 
         funcs = get_2D_pols(deg)
-        design = calc_design(feature_values,funcs)
-        X_train, X_test, z_train, z_test = split_scale(design,label_values)
+        design = calc_design(x,funcs)
+        X_train, X_test, z_train, z_test = split_scale(design,z)
         beta = find_beta(X_train,z_train)
-        z_tilde = get_model(X_train,beta)
+        z_tilde = get_predict(X_train,beta)
         R2_vals[i] = R2(z_train,z_tilde)
         MSE_vals[i] = MSE(z_train,z_tilde)
         if (include_beta):
@@ -51,3 +88,4 @@ def prod_score_plots(feature_values, label_values, max_poly = 5, include_MSE = T
         simple_plot(poly_degs,MSE_vals,"Mean Squared Error", "polynomial degree", "Score")
         plt.savefig("plots/MSE.pdf")
         plt.close()
+"""

@@ -19,6 +19,13 @@ def get_2D_string(deg):
         str_pols += [get_poly_text(i,j) for i in range(j + 1)]
     return str_pols
 
+def get_poly_index(deg):
+    # Returns the index of the last polynomial of a given degree
+    index = 0
+    for i in range(deg):
+        index += i + 2
+    return index
+
 def get_poly_text(i,j):
     # Helper function for getting the string version of a specific polynomial
     # i is the degree of y, while j is the total polynomial degree
