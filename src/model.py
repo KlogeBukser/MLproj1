@@ -13,9 +13,9 @@ class Model(object):
         self.features = get_poly_index(self.polydeg) + 1
         self.functions = get_2D_pols(self.polydeg)
 
-    def get_polydeg(self):
-        # Returns polynomial degree of model
-        return self.polydeg
+    def get_beta(self):
+        # Returns beta
+        return self.beta
 
     def design(self,x):
         # Uses the features to turn set of tuple values (x,y) into design matrix

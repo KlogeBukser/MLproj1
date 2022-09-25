@@ -5,8 +5,9 @@ import pandas as pd
 from generate import *
 from produce_results import *
 
-np.random.seed(2022)
+np.random.seed(1)
 
 x, z = generate_data_Franke(20,noise = 0.5)
 
-plot_MSE(x,z,8)
+plot_MSE_comparison(x,z,8)
+plot_scores_beta(x,z,5)
