@@ -74,6 +74,7 @@ class Model(object):
             # Stops program from reducing complexity when no longer possible
             return False
 
+        self.end_boot()
         self.polydeg -= 1
         self.features = get_poly_index(self.polydeg) + 1
         self.beta = np.empty(self.features)
