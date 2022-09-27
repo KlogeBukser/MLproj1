@@ -1,8 +1,9 @@
 import numpy as np
 
 from poly_funcs import get_2D_pols, get_2D_string, get_poly_index
-# from calculate import calc_design, find_beta, get_predict
+from calculate import sq_diff, MSE, R2
 from transform import bootstrap
+
 
 class Model(object):
     """Regression model"""
@@ -35,12 +36,43 @@ class Model(object):
         return beta
 
 
-    def find_beta_ridge(X,y):
-        pass
+    def find_beta_ridge(self, X, y, lamb):
 
+        '''return the best for the best lambda for the given number of lambdas'''
 
-    def find_beta_lasso(X,y):
-        pass
+        sqr = np.dot(X.T,X)
+        dim = sqr.shape[0]
+        mat = sqr-lamb*np.identity(dim)
+
+        if np.linalg.det(mat):
+            inv = np.linalg.inv(mat)             #nf*nf
+
+        else:
+            # psuedoinversion for singular matrices
+            inv = np.linalg.pinv(mat)
+
+        beta = inv @ X.T @ y
+
+        return beta
+
+    def best_ridge_beta(self, X, y, nlamb=100, lamb_range=(-4,4)):
+
+        lambdas = np.logspace(lamb_range[0], lamb_range[1], nlambdas)
+        best_beta = self.find_beta_ridge(X, y, lambdas[0])
+
+        for lamb in lambdas:
+            beta = self.find_beta_ridge(X, y, lamb)
+            if self.cmp_beta(beta_1, beta_2, MSE):
+                best_beta = beta
+
+        return best_beta
+
+    def cmp_beta(self, X, beta_1, beta_2, cmp_func):
+        '''return a true if beta_1 has smaller cpm_func and false otherwise '''
+
+        if np.mean(cmp_func(beta_1)) < np.mean(cmp_func(beta_2)): # ?questionable comparison
+            return True
+        return False
 
 
     def add_x(self,x,name):
