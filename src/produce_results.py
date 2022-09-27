@@ -1,5 +1,4 @@
 
-
 from plotting import *
 from calculate import *
 from poly_funcs import *
@@ -18,13 +17,17 @@ def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
     # Number of relevant polynomial degrees (it includes 0)
     n_pol = polydeg + 1
 
-    # Makes a model that finds, and holds the polynomial features
-    # The features are used to construct the design matrix
-    model = Model(polydeg)
-    X = model.design(x)
-
     # Split into training and testing data
-    X_train, X_test, z_train, z_test = train_test_split(X,z)
+    x_train, x_test, z_train, z_test = train_test_split(x,z)
+
+    # Makes a model that
+    # -Holds polynomial features
+    # -Constructs and holds design matrix, and training z
+    # -Fits the model by finding and saving beta
+    model = Model(polydeg,x_train,z_train)
+
+    # Adds the testing data x_test under the label "test"
+    model.add_x(x_test, "test")
 
     # Array of polynomial degrees
     poly_degs = np.arange(n_pol)
@@ -38,11 +41,10 @@ def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
         # Loops backwards over polynomial degrees
         # Reduces model complexity with one polynomial degree per iteration
 
-        z_boot,z_boot_fit = model.start_boot(X_train, z_train, n_boots,pred_boot = True)
-        z_pred = model.boot_predict(X_test)
-        z_fit = model.boot_predict(X_train)
+        z_boot,z_boot_fit = model.start_boot(n_boots,predict_boot = True)
+        z_pred = model.boot_predict("test")
+        z_fit = model.boot_predict("train")
         model.end_boot()
-
 
         MSE_pred[deg] = np.mean([MSE(z_test, z_pred[:,i]) for i in range(n_boots)])
         MSE_fit[deg] = np.mean([MSE(z_train, z_fit[:,i]) for i in range(n_boots)])
@@ -72,11 +74,12 @@ def plot_scores_beta(x, z, polydeg = 5, axis_features = True):
 
     # Makes a model that finds, and holds the polynomial features
     # The features are used to construct the design matrix
-    model = Model(polydeg)
-    X = model.design(x)
+
 
     # Split into training and testing data
-    X_train, X_test, z_train, z_test = train_test_split(X,z)
+    x_train, x_test, z_train, z_test = train_test_split(x,z)
+    model = Model(polydeg,x_train,z_train)
+    model.add_x(x_test,"test")
 
     # Array of polynomial degrees for plotting
     poly_degs = np.arange(n_pol)
@@ -85,14 +88,14 @@ def plot_scores_beta(x, z, polydeg = 5, axis_features = True):
         # Loops backwards over polynomial degrees
         # Fits model to training data
         # Makes prediction for z, and compares to test data with MSE and R squared
-        model.fit(X_train, z_train)
-        z_pred = model.predict(X_test)
+        #model.fit(X_train, z_train)
+        z_pred = model.predict("test")
         MSE_vals[deg] = MSE(z_test, z_pred)
         R2_vals[deg] = R2(z_test, z_pred)
 
         # Collects beta from the model
         # Makes overlapping plots of beta, one for each polynomial degree
-        beta = model.get_beta()
+        beta = model.beta
         if (axis_features):
             # Collects the polynomial as a string to use as the x-axis
             # While neat, this might be too clunky
@@ -112,14 +115,14 @@ def plot_scores_beta(x, z, polydeg = 5, axis_features = True):
     title_axlabs("Beta for different amounts of features","Features","Beta")
     plt.legend()
     plt.savefig("plots/beta.pdf")
-    plt.close()
+    plt.show()
 
     # Plots R2 score over polynomial degrees
     simple_plot(poly_degs,R2_vals, "R$^2$ Score", "polynomial degree", "R2")
     plt.savefig("plots/R2.pdf")
-    plt.close()
+    plt.show()
 
     # Plots MSE score over polynomial degrees
     simple_plot(poly_degs,MSE_vals,"Mean Squared Error", "polynomial degree", "MSE")
     plt.savefig("plots/MSE.pdf")
-    plt.close()
+    plt.show()
