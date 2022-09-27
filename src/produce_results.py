@@ -13,8 +13,7 @@ from sklearn.model_selection import train_test_split
 def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
     # Makes models for every polynomial degree up to the input
     # Uses bootstrap method for resampling
-    # Plots MSE on the Test data, entire Training data
-    # Also plots MSE for the bootstrap subsets
+    # Plots MSE on the Test data, entire Training data, and bootstrap samples
 
     # Number of relevant polynomial degrees (it includes 0)
     n_pol = polydeg + 1
@@ -38,37 +37,20 @@ def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
     for deg in poly_degs[::-1]:
         # Loops backwards over polynomial degrees
         # Reduces model complexity with one polynomial degree per iteration
-        # Loop is stopped from if-condition when it's not able to reduce complexity further
 
-        for i in range(n_boots):
-            # Collects subsets (with overlap) from training data
-            # Fits model to the 'boot data'
-            # Predicts z for the test set, training set, and boot set
-            # Note that the test, and training sets are the same for every (inner) loop
-            # but the boot set is different each time
-            X_boot, z_boot = bootstrap(X_train,z_train)
-            model.fit(X_boot, z_boot)
+        z_boot,z_boot_fit = model.start_boot(X_train, z_train, n_boots,pred_boot = True)
+        z_pred = model.boot_predict(X_test)
+        z_fit = model.boot_predict(X_train)
+        model.end_boot()
 
-            # Predicts onf training and test data
-            z_pred = model.predict(X_test)
-            z_fit = model.predict(X_train)
 
-            # Calculates MSE on all predictions from training and test data
-            MSE_pred[deg] += MSE(z_test, z_pred)
-            MSE_fit[deg] += MSE(z_train, z_fit)
-
-            # MSE on the bootstrap sample
-            z_fit_boot = model.predict(X_boot)
-            MSE_boot[deg] += MSE(z_boot,z_fit_boot)
+        MSE_pred[deg] = np.mean([MSE(z_test, z_pred[:,i]) for i in range(n_boots)])
+        MSE_fit[deg] = np.mean([MSE(z_train, z_fit[:,i]) for i in range(n_boots)])
+        MSE_boot[deg] = np.mean([MSE(z_boot[:,i],z_boot_fit[:,i]) for i in range(n_boots)])
 
         # Reduces the complexity of the model
         model.reduce_complexity()
 
-
-    # Scales the MSE values to get the average over bootstraps
-    MSE_pred /= n_boots
-    MSE_fit /= n_boots
-    MSE_boot /= n_boots
 
     # Plots and saves plot of MSE comparisons
     multi_yplot(poly_degs, (MSE_pred,MSE_fit,MSE_boot),("Testing","Training","Bootstrap data"), "Mean Squared Error", "polynomial degree", "Score")

@@ -2,6 +2,7 @@ import numpy as np
 
 from poly_funcs import get_2D_pols, get_2D_string, get_poly_index
 from calculate import calc_design, find_beta, get_predict
+from transform import bootstrap
 
 class Model(object):
     """Regression model"""
@@ -16,6 +17,40 @@ class Model(object):
     def get_beta(self):
         # Returns beta
         return self.beta
+
+    def start_boot(self, X_train, z_train, n_boots, pred_boot = False):
+        self.n_boots = n_boots
+        self.boot_betas = np.empty((self.features, n_boots))
+
+        if (pred_boot):
+            # This option save the boot sample for z, and its prediction on X boot
+            # Only use this option if you want these values
+            z_boots = np.empty((len(z_train),self.n_boots))
+            z_boots_fit = np.copy(z_boots)
+            for i in range(n_boots):
+                X_, z_ = bootstrap(X_train[:,:self.features],z_train)
+                beta = find_beta(X_, z_)
+                self.boot_betas[:,i] = beta
+                z_boots[:,i] = z_
+                z_boots_fit[:,i] = get_predict(X_, beta)
+
+            return z_boots, z_boots_fit
+
+        else:
+            # Saves the beta values for each bootstrap sample
+            for i in range(n_boots):
+                X_, z_ = bootstrap(X_train[:,:self.features],z_train)
+                self.boot_betas[:,i] = find_beta(X_, z_)
+
+    def boot_predict(self,X):
+        z_pred = np.empty((X.shape[0],self.n_boots))
+        for i in range(self.n_boots):
+            z_pred[:,i] = get_predict(X[:,:self.features],self.boot_betas[:,i])
+        return z_pred
+
+    def end_boot(self):
+        self.n_boots = 0
+        self.boot_betas = 0
 
     def design(self,x):
         # Uses the features to turn set of tuple values (x,y) into design matrix
