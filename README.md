@@ -4,6 +4,7 @@ Machine Learning Project 1
 ## TODO (code):
 
 - More documentation for methods in model and produce_results
+- Other ways of plotting beta (not a line graph)
 
 ### Part b
 - scaling/centering of the data (for example by subtracting the mean value) (There is functions for this, but it is currently not in use)
