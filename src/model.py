@@ -55,14 +55,14 @@ class Model(object):
 
         return beta
 
-    def best_ridge_beta(self, X, y, nlamb=100, lamb_range=(-4,4)):
+    def best_ridge_beta(self, X, y, nlamb=100, lamb_range=(-4,4), min_func=MSE):
 
         lambdas = np.logspace(lamb_range[0], lamb_range[1], nlambdas)
         best_beta = self.find_beta_ridge(X, y, lambdas[0])
 
         for lamb in lambdas:
             beta = self.find_beta_ridge(X, y, lamb)
-            if self.cmp_beta(beta_1, beta_2, MSE):
+            if self.cmp_beta(beta_1, beta_2, min_func):
                 best_beta = beta
 
         return best_beta

@@ -5,6 +5,7 @@ Machine Learning Project 1
 
 - More documentation for methods in model and produce_results
 - Other ways of plotting beta (not a line graph)
+- separate producing results and plotting
 
 ### Part b
 - scaling/centering of the data (for example by subtracting the mean value) (There is functions for this, but it is currently not in use)
@@ -14,6 +15,11 @@ Machine Learning Project 1
 - The functions that compares models for different polynomial degrees run in decreasing order of complexity. This is done to for optimization reasons. It lets us find all features and make the design matrix just once, removing/ignoring the remainder when reducing the complexity.
 - The model object saves the features as an array of functions, it also saves integers for number of features, and polynomial degree.
 - In addition it also saves the coefficients beta, but the method fit(X_train,z_data) must be use to produce the beta values. When complexity is reduced, the previous beta values are discarded.
+
+## Patch notes for model 2.1
+- Absorbed functions from calculate.py into the model
+- Introduced new methods find_beta_ridge, cmp_beta, and best_ridge_beta
+- renamed find_beta to find_beta_ols
 
 ## Patch notes for model 2.0
 - Model will now take training data (x_train,z_train) in constructor
