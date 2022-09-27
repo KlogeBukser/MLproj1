@@ -38,7 +38,7 @@ class Model(object):
 
     def find_beta_ridge(self, X, y, lamb):
 
-        '''return the best for the best lambda for the given number of lambdas'''
+        '''return the best for the best lambda for the given lambda'''
 
         sqr = np.dot(X.T,X)
         dim = sqr.shape[0]
@@ -70,15 +70,16 @@ class Model(object):
     def cmp_beta(self, X, beta_1, beta_2, cmp_func):
         '''return a true if beta_1 has smaller cpm_func and false otherwise '''
 
-        if np.mean(cmp_func(beta_1)) < np.mean(cmp_func(beta_2)): # ?questionable comparison
+        if cmp_func(y_data, beta_1 @ X) < cmp_func(y_data, beta_2 @ X): # ?questionable comparison
             return True
         return False
+
 
 
     def add_x(self,x,name):
         self.X_dict[name] = self.design(x)
 
-    def start_boot(self, n_boots, predict_boot = False):
+    def start_boot(self, n_boots, predict_boot = False, regression_method=ols):
         self.n_boots = n_boots
         self.boot_betas = np.empty((self.feature_count, n_boots))
 
