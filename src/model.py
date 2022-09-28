@@ -8,7 +8,7 @@ from transform import bootstrap
 class Model(object):
     """Regression model"""
 
-    def __init__(self,polydeg,x_train,z_train, train_name = "train"):
+    def __init__(self,polydeg,x_train,z_train, train_name = "train", regression_method='ols'):
         # Collects the feature functions for a "2 variable polynomial of given degree"
         # Saves integers describing polynomial degree and number of features
         # Takes training data, saves z_train the design matrix X_train
@@ -19,11 +19,11 @@ class Model(object):
         self.z = z_train
         self.X_dict = {train_name:self.design(x_train)}
         # self.beta = self.find_beta_ols(self.X_dict["train"], self.z)
-        self.beta = self.choose_beta(self.X_dict["train"], self.z) # ugh!!
+        self.beta = self.choose_beta(self.X_dict["train"], self.z, regression_method)
 
 
     def find_beta_ols(self,X,y):
-    # Finds beta
+     ''' Finds beta using OLS '''
         square = np.dot(X.T,X)                      #nf*nf
         if np.linalg.det(square):
             inv = np.linalg.inv(square)             #nf*nf
@@ -60,7 +60,14 @@ class Model(object):
     def best_ridge_beta(self, X, y, nlambdas=100, lamb_range=(-4,4), min_func=MSE):
 
         if nlambdas == 1:
-            assert type(lamb_range) == int, 'For single lambda use interger for lamb_range'
+            
+            try:
+                lamb = float(lamb_range)
+            except:
+                'For single lambda use interger for lamb_range'
+
+            return self.find_beta_ridge(X, y, lamb_range)
+
 
         lambdas = np.logspace(lamb_range[0], lamb_range[1], nlambdas)
         best_beta = self.find_beta_ridge(X, y, lambdas[0])
@@ -72,7 +79,7 @@ class Model(object):
                 best_beta = beta
                 self.best_lamb = lamb
 
-        print(self.best_lamb)
+        # print(self.best_lamb)
         return best_beta
 
     def cmp_beta(self, X, y, beta_1, beta_2, cmp_func):

@@ -1,25 +1,39 @@
 # MLproj1
 Machine Learning Project 1
 
+# PLEASE USE """  """ FOR DOCSTRING OF FUNCTIONS INSTEAD OF #
+
 ## HOW TO RUN
 
 ### For OLS
 run main.py
 
 ### For Ridge Regression
+comment
+
+```python
+regression_method = 'ols'
+```
 uncomment
 
 ```python
-plot_MSE_comparison(x,z,8,regression_method='ridge')
-plot_scores_beta(x,z,5,regression_method='ridge')
+regression_method = 'ridge'
 ```
 
 ## TODO (code):
 
-- More documentation for methods in model and produce_results
-- Other ways of plotting beta (not a line graph)
+- More documentation for methods in model and produce_results (somewhat ok)
+- Other ways of plotting beta? (not a line graph)
 - Separate producing results and plotting
 - Reduce the number of variables passed into the methods which are redundant
+- Plot bias/variance vs complexity
+- Cross-validation: not finsihed, skeleton in transform
+- fill in cross_valid in transform
+- fill in function plot_lasso in produce_results
+- make functions for selecting regression method and resempling methods (skeleton)
+
+## TODO (latex)
+- write TODO
 
 ### Part b
 - scaling/centering of the data (for example by subtracting the mean value) (There is functions for this, but it is currently not in use)

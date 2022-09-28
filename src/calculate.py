@@ -5,10 +5,11 @@ def sq_diff(a,b):
     # Helper function for error models
     return sum([(a[i] - b[i])**2 for i in range(len(a))])
 
-def MSE(y_data,y_model):
-    # First param is from the data set. Second param is from model
-    n = len(y_data)
-    return sq_diff(y_data,y_model)/n
+# def MSE(y_data,y_model):
+    # # First param is from the data set. Second param is from model
+    # n = len(y_data)
+    # return sq_diff(y_data,y_model)/n
+
 
 def R2(y_data,y_model):
     # Finds R squared score
@@ -18,32 +19,39 @@ def R2(y_data,y_model):
 
 
 
-"""
-Linear algebra objects
-"""
-def get_predict(X,beta):
-    return np.dot(X,beta)
 
-def find_beta(X,y):
-    # Finds beta
-    square = np.dot(X.T,X)                      #nf*nf
-    if (np.linalg.det(square) != 0):
-        inv = np.linalg.inv(square)             #nf*nf
-        beta = np.dot(np.dot(inv,X.T),y)        #nf*1
-        return beta
+# some of these are from lecture notes with modification
+def MSE(y_test, y_pred):
+    """computes the mean squared error for a given prediction
 
-    else:
-        print("You dun goofed")
+    :y_test: TODO
+    :y_pred: TODO
+    :returns: TODO
+
+    """
+    return np.mean( np.mean((y_test - y_pred)**2, keepdims=True) )
 
 
-def calc_design(vars,functions):
+def cal_bias(y_test, y_pred):
+    """computes the bias for a given prediction
 
-    n = vars.shape[0]
-    n_funcs = len(functions)
-    design = np.ones((n, n_funcs))
+    :y_test: array like
+    :y_pred: array like
+    :returns: bias
 
-    for i in range(n):
-        for j in range(n_funcs):
-            design[i,j] = functions[j](vars[i])
+    """
+    return np.mean( (y_test - np.mean(y_pred, keepdims=True))**2 )
 
-    return design
+def cal_variance(y_test, y_pred):
+    """computes the variance for a given prediction
+
+    :y_test: array-like
+    :y_pred: array-like
+    :returns: variance
+
+    """
+    return np.mean( np.var(y_pred, keepdims=True) )
+    
+
+
+
