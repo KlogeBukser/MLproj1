@@ -9,7 +9,7 @@ import os
 ERR_NOT_ENUF_COLORS = 'Colors should be the same length as or longer plot_count'
 ERR_TOO_MANY_PLOTS = 'Too many plots on a single figure'
 ERR_NOT_ENUF_LABELS = 'Label count should match plot count'
-COLORS = 'brgcmykw' # all default colours
+COLORS = 'cbrgmykw' # all default colours
 
 
 def simple_plot(x,y,title = "Temporary title",xlab = "x",ylab = "y"):
@@ -42,7 +42,7 @@ def title_axlabs(title,xlab,ylab):
     plt.xlabel(xlab)
     plt.ylabel(ylab)
 
-def set_paras(x_title,y_title,title=None,filename=None,file_dir=''):
+def set_paras(x_title,y_title,title=None,filename=None,file_dir='plots'):
 
     '''set all the parameters in the figure and save files'''
     plt.legend()
@@ -53,7 +53,8 @@ def set_paras(x_title,y_title,title=None,filename=None,file_dir=''):
     if filename:
         full_path = os.path.join(file_dir, filename)
         plt.savefig(full_path)
-        plt.close()
+        # plt.close()
+        plt.show() #for testing
     else:
         plt.show()
 
@@ -66,8 +67,14 @@ def is_valid(plot_count,color, label):
     if label:
         assert len(label) == plot_count, ERR_TOO_MANY_PLOTS
 
+def make_dir(file_dir):
+    '''checks if the directory exists if not make one'''
+    if file_dir:
+        if not os.path.exists(file_dir):
+            os.mkdir(file_dir)
+
 def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=None,filename=None,
-        file_dir='',color=COLORS):
+        file_dir='plots',color=COLORS):
 
     '''plots inputs: x:array like of array like, y:array like of array likes, 
     plot_count:int(number of plots),title:string, file_dir:string,colour:string'''

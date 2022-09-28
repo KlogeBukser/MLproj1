@@ -1,6 +1,19 @@
 # MLproj1
 Machine Learning Project 1
 
+## HOW TO RUN
+
+### For OLS
+run main.py
+
+### For Ridge Regression
+uncomment
+
+```python
+plot_MSE_comparison(x,z,8,regression_method='ridge')
+plot_scores_beta(x,z,5,regression_method='ridge')
+```
+
 ## TODO (code):
 
 - More documentation for methods in model and produce_results

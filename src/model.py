@@ -54,24 +54,31 @@ class Model(object):
 
         beta = inv @ X.T @ y
 
+
         return beta
 
-    def best_ridge_beta(self, X, y, nlamb=100, lamb_range=(-4,4), min_func=MSE):
+    def best_ridge_beta(self, X, y, nlambdas=100, lamb_range=(-4,4), min_func=MSE):
+
+        if nlambdas == 1:
+            assert type(lamb_range) == int, 'For single lambda use interger for lamb_range'
 
         lambdas = np.logspace(lamb_range[0], lamb_range[1], nlambdas)
         best_beta = self.find_beta_ridge(X, y, lambdas[0])
+        self.best_lamb = lambdas[0]
 
         for lamb in lambdas:
             beta = self.find_beta_ridge(X, y, lamb)
-            if self.cmp_beta(beta_1, beta_2, min_func):
+            if self.cmp_beta(X, y, beta, best_beta, cmp_func=min_func):
                 best_beta = beta
+                self.best_lamb = lamb
 
+        print(self.best_lamb)
         return best_beta
 
-    def cmp_beta(self, X, beta_1, beta_2, cmp_func):
+    def cmp_beta(self, X, y, beta_1, beta_2, cmp_func):
         '''return a true if beta_1 has smaller cpm_func and false otherwise '''
 
-        if cmp_func(y_data, beta_1 @ X) < cmp_func(y_data, beta_2 @ X): # ?questionable comparison
+        if cmp_func(y, X @ beta_1) < cmp_func(y, X @ beta_2): # ?questionable comparison
             return True
         return False
 

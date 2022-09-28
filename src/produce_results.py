@@ -19,7 +19,7 @@ def produce_error(data, model):
 
     return mse_err, r2_err
 
-def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
+def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100, regression_method='ols'):
     # Makes models for every polynomial degree up to the input
     # Uses bootstrap method for resampling
     # Plots MSE on the Test data, entire Training data, and bootstrap samples
@@ -52,7 +52,7 @@ def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
         # Reduces model complexity with one polynomial degree per iteration
 
         # try absorb the next 7 lines into model
-        z_boot,z_boot_fit = model.start_boot(n_boots,predict_boot = True)
+        z_boot,z_boot_fit = model.start_boot(n_boots, True, regression_method)
         # z_boot,z_boot_fit = model.start_boot(n_boots,predict_boot = True, regression_method = 'ridge')
         z_pred = model.boot_predict("test")
         z_fit = model.boot_predict("train")
@@ -67,16 +67,16 @@ def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
 
 
     # Plots and saves plot of MSE comparisons
-    multi_yplot(poly_degs, (MSE_pred,MSE_fit,MSE_boot),("Testing","Training","Bootstrap data"), "Mean Squared Error", "polynomial degree", "Score")
-    plt.savefig("plots/MSE_comp.pdf")
+    multi_yplot(poly_degs, (MSE_pred,MSE_fit,MSE_boot),("Testing","Training","Bootstrap data"), regression_method + " Mean Squared Error", "polynomial degree", "Score")
+    plt.savefig("plots/" + regression_method + " MSE_comp.pdf")
     plt.show()
 
 
 def plot_scores_beta(x, z, polydeg = 5, axis_features = True, regression_method='ols'):
 
-    # Produces plot(s) for measuring quality of 2D polynomial model
-    # Plots Mean squared error, R2-score, and beta values
-    # The Beta plot uses features on the x-axis, but numbers can be used instead if (features_beta = False)
+    '''Produces plot(s) for measuring quality of 2D polynomial model
+    Plots Mean squared error, R2-score, and beta values
+    The Beta plot uses features on the x-axis, but numbers can be used instead if (features_beta = False) '''
 
     # Number of relevant polynomial degrees (it includes 0)
     n_pol = polydeg + 1
@@ -125,17 +125,12 @@ def plot_scores_beta(x, z, polydeg = 5, axis_features = True, regression_method=
 
 
     # Saves the overlapping Beta plots to file
-    title_axlabs("Beta for different amounts of features","Features","Beta")
-    plt.legend()
-    plt.savefig("plots/beta.pdf")
-    plt.show()
+
+    set_paras(title="Beta " + regression_method + " for different amounts of features",x_title='Features',y_title='Beta',
+        filename = regression_method + ' beta.pdf', file_dir='plots')
 
     # Plots R2 score over polynomial degrees
-    simple_plot(poly_degs,R2_vals, "R$^2$ Score", "polynomial degree", "R2")
-    plt.savefig("plots/R2.pdf")
-    plt.show()
+    plot_2D([poly_degs], [R2_vals], title=regression_method + " R$^2$ Score ",x_title="polynomial degree",y_title="R2",filename= regression_method + ' R2.pdf')
 
     # Plots MSE score over polynomial degrees
-    simple_plot(poly_degs,MSE_vals,"Mean Squared Error", "polynomial degree", "MSE")
-    plt.savefig("plots/MSE.pdf")
-    plt.show()
+    plot_2D([poly_degs],[MSE_vals],title=regression_method + " Mean Squared Error", x_title="polynomial degree", y_title="MSE", filename=regression_method + ' MSE.pdf')
