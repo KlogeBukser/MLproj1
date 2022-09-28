@@ -18,7 +18,8 @@ class Model(object):
         self.datapoints = len(z_train)
         self.z = z_train
         self.X_dict = {train_name:self.design(x_train)}
-        self.beta = self.find_beta_ols(self.X_dict["train"], self.z)
+        # self.beta = self.find_beta_ols(self.X_dict["train"], self.z)
+        self.beta = self.choose_beta(self.X_dict["train"], self.z) # ugh!!
 
 
     def find_beta_ols(self,X,y):
@@ -75,11 +76,23 @@ class Model(object):
         return False
 
 
-
     def add_x(self,x,name):
         self.X_dict[name] = self.design(x)
 
-    def start_boot(self, n_boots, predict_boot = False, regression_method=ols):
+    def choose_beta(self, X, z, regression_method='ols'):
+        '''return the beta found using the specified regression method
+        input: X: matrix, z: array like '''
+        if regression_method == 'ols':
+            beta = self.find_beta_ols(X, z)
+        elif regression_method == 'ridge':
+            beta = self.best_ridge_beta(X, z)
+        else:
+            raise Exception('Invalid regression_method, try something else you bastard!')
+        
+        return beta
+
+
+    def start_boot(self, n_boots, predict_boot = False, regression_method='ols'):
         self.n_boots = n_boots
         self.boot_betas = np.empty((self.feature_count, n_boots))
 
@@ -90,7 +103,9 @@ class Model(object):
             z_boots_fit = np.copy(z_boots)
             for i in range(n_boots):
                 X_, z_ = bootstrap(self.X_dict["train"],self.z)
-                beta = self.find_beta_ols(X_, z_)
+
+                beta = self.choose_beta(X_, z_, regression_method)
+
                 self.boot_betas[:,i] = beta
                 z_boots[:,i] = z_
                 z_boots_fit[:,i] = np.dot(X_, beta)

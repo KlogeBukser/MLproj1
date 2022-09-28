@@ -9,6 +9,16 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 
+def produce_error(data, model):
+    '''produce MSE, R2 erros for any set of data for any given regression model.
+    input: data: array like, 
+    return tuple of 2 arrays in which the first is a mse and the seocnd is r2'''
+
+    mse_err = MSE(data, model)
+    r2_err = R2(data, model)
+
+    return mse_err, r2_err
+
 def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
     # Makes models for every polynomial degree up to the input
     # Uses bootstrap method for resampling
@@ -26,7 +36,7 @@ def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
     # -Fits the model by finding and saving beta
     model = Model(polydeg,x_train,z_train)
 
-    # Adds the testing data x_test under the label "test"
+    # Adds the testing data x_test to the dictionary with key "test"
     model.add_x(x_test, "test")
 
     # Array of polynomial degrees
@@ -41,7 +51,9 @@ def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
         # Loops backwards over polynomial degrees
         # Reduces model complexity with one polynomial degree per iteration
 
+        # try absorb the next 7 lines into model
         z_boot,z_boot_fit = model.start_boot(n_boots,predict_boot = True)
+        # z_boot,z_boot_fit = model.start_boot(n_boots,predict_boot = True, regression_method = 'ridge')
         z_pred = model.boot_predict("test")
         z_fit = model.boot_predict("train")
         model.end_boot()
@@ -60,7 +72,7 @@ def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100):
     plt.show()
 
 
-def plot_scores_beta(x, z, polydeg = 5, axis_features = True):
+def plot_scores_beta(x, z, polydeg = 5, axis_features = True, regression_method='ols'):
 
     # Produces plot(s) for measuring quality of 2D polynomial model
     # Plots Mean squared error, R2-score, and beta values
@@ -95,7 +107,8 @@ def plot_scores_beta(x, z, polydeg = 5, axis_features = True):
 
         # Collects beta from the model
         # Makes overlapping plots of beta, one for each polynomial degree
-        beta = model.beta
+        beta = model.choose_beta(model.X_dict["train"], model.z, regression_method)
+
         if (axis_features):
             # Collects the polynomial as a string to use as the x-axis
             # While neat, this might be too clunky
@@ -104,7 +117,7 @@ def plot_scores_beta(x, z, polydeg = 5, axis_features = True):
             # Uses integers on the x-axis
             # This is more readable, and should be used on large polynomials
             x_ax = np.arange(len(beta))
-        plt.plot(x_ax,beta, label = "Degree %d" % deg)
+        plt.plot(x_ax, beta, label = "Degree %d" % deg)
 
         # Reduces the complexity of the model
         # Stops the loop if the model complexity cannot be reduced further

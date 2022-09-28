@@ -42,7 +42,7 @@ def title_axlabs(title,xlab,ylab):
     plt.xlabel(xlab)
     plt.ylabel(ylab)
 
-def set_paras(x_title,y_title,title,filename,file_dir):
+def set_paras(x_title,y_title,title=None,filename=None,file_dir=''):
 
     '''set all the parameters in the figure and save files'''
     plt.legend()
