@@ -52,12 +52,9 @@ plot_scores_beta(x,z,5,regression_method='ridge')
 
 ## Potential plans for model improvement
 - sort methods according to usage (I.E. put all bootstrap methods together, with clear indentation for easier readability)
-- Include functions from calculate.py into Model methods
-* calc-design into Model.design
-* find_beta into new method in Model
-* get_predict into new method in Model
 
 - Some (or all?) of the functions from poly_funcs.py could also be implemented into model
 - Ridge + Lasso
 - Cross Validation/KFold
 - scaling
+
