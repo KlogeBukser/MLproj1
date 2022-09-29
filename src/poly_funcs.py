@@ -12,12 +12,6 @@ def get_2D_pols(deg):
         pols += [(lambda xy, i = i, j = j: xy[0]**(j - i) * xy[1]**i) for i in range(j + 1)]
     return pols
 
-def get_2D_string(deg):
-    # Method for collecting the polynomials as strings
-    str_pols = []
-    for j in range(deg + 1):
-        str_pols += [get_poly_text(i,j) for i in range(j + 1)]
-    return str_pols
 
 def get_poly_index(deg):
     # Returns the index of the last polynomial of a given degree
@@ -25,6 +19,15 @@ def get_poly_index(deg):
     for i in range(deg):
         index += i + 2
     return index
+
+
+""" Can most likely be removed
+def get_2D_string(deg):
+    # Method for collecting the polynomials as strings
+    str_pols = []
+    for j in range(deg + 1):
+        str_pols += [get_poly_text(i,j) for i in range(j + 1)]
+    return str_pols
 
 def get_poly_text(i,j):
     # Helper function for getting the string version of a specific polynomial
@@ -41,3 +44,4 @@ def get_poly_text(i,j):
     if (i > 1):
         poly += "^" + str(i)
     return poly + "$"
+"""

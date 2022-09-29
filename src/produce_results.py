@@ -16,7 +16,7 @@ ERR_INVALID_METHOD.format(*ALLOWED_METHODS)
 
 def produce_error(data, model):
     '''produce MSE, R2 erros for any set of data for any given regression model.
-    input: data: array like, 
+    input: data: array like,
     return tuple of 2 arrays in which the first is a mse and the seocnd is r2'''
 
     mse_err = MSE(data, model)
@@ -28,7 +28,7 @@ def produce_error(data, model):
 
 def train_model(polydeg, x, z, container_names, method):
 
-    '''prepare data for training and testing as well as 
+    '''prepare data for training and testing as well as
     training the model'''
 
     # Number of relevant polynomial degrees (it includes 0)
@@ -88,7 +88,7 @@ def plot_MSE_comparison(x, z, polydeg = 5, n_boots = 100, regression_method='ols
     plt.show()
 
 
-def plot_scores_beta(x, z, polydeg = 5, axis_features = True, regression_method='ols'):
+def plot_scores_beta(x, z, polydeg = 5, regression_method='ols'):
 
     '''Produces plot(s) for measuring quality of 2D polynomial model
     Plots Mean squared error, R2-score, and beta values
@@ -108,15 +108,7 @@ def plot_scores_beta(x, z, polydeg = 5, axis_features = True, regression_method=
         # Makes overlapping plots of beta, one for each polynomial degree
         beta = model.choose_beta(model.X_dict["train"], model.z, regression_method)
 
-        if (axis_features):
-            # Collects the polynomial as a string to use as the x-axis
-            # While neat, this might be too clunky
-            x_ax = get_2D_string(deg)
-        else:
-            # Uses integers on the x-axis
-            # This is more readable, and should be used on large polynomials
-            x_ax = np.arange(len(beta))
-        plt.plot(x_ax, beta, label = "Degree %d" % deg)
+        plt.plot(np.arange(len(beta)), beta, label = "Degree %d" % deg)
 
         # Reduces the complexity of the model
         # Stops the loop if the model complexity cannot be reduced further
@@ -147,7 +139,7 @@ def plot_MSEs(x, z, polydeg=5, n_boots=100, nlambdas=100, regression_method='ols
 
     if regression_method == 'lasso':
         plot_MSE_lasso(x,z,polydeg,nlambdas) # does nothing rn
-        
+
     else:
         plot_MSE_comparison(x,z,polydeg,regression_method=regression_method)
 
@@ -171,5 +163,5 @@ def plot_MSE_lasso(x,z,polydeg,nlambdas):
         print(reg_lasso.coef_)
         MSE_lasso_predicts[lamb] = MSE(z_test,z_predict_lasso)
 
-    plot_2D([polydeg], [MSE_lasso_predicts], title='Lasso MSE', x_title='polynomial degrees', 
+    plot_2D([polydeg], [MSE_lasso_predicts], title='Lasso MSE', x_title='polynomial degrees',
             y_title='MSE', filename='lasso MSE')

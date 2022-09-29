@@ -1,6 +1,6 @@
 import numpy as np
 
-from poly_funcs import get_2D_pols, get_2D_string, get_poly_index
+from poly_funcs import get_2D_pols, get_poly_index
 from calculate import MSE, R2
 from transform import bootstrap
 
