@@ -23,7 +23,7 @@ class Model(object):
 
 
     def find_beta_ols(self,X,y):
-     ''' Finds beta using OLS '''
+        ''' Finds beta using OLS '''
         square = np.dot(X.T,X)                      #nf*nf
         if np.linalg.det(square):
             inv = np.linalg.inv(square)             #nf*nf
@@ -60,7 +60,7 @@ class Model(object):
     def best_ridge_beta(self, X, y, nlambdas=100, lamb_range=(-4,4), min_func=MSE):
 
         if nlambdas == 1:
-            
+
             try:
                 lamb = float(lamb_range)
             except:
@@ -102,7 +102,7 @@ class Model(object):
             beta = self.best_ridge_beta(X, z)
         else:
             raise Exception('Invalid regression_method, try something else you bastard!')
-        
+
         return beta
 
 
