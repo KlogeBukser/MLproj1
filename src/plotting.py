@@ -77,7 +77,7 @@ def make_dir(file_dir):
 def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=False,filename=None,
         file_dir='plots',color=COLORS):
 
-    '''plots inputs: x:array like of array like, y:array like of array likes, 
+    '''plots inputs: x:array like of array like, y:array like of array likes,
     plot_count:int(number of plots),title:string, file_dir:string,colour:string'''
 
     is_valid(plot_count, color, label)
@@ -90,20 +90,20 @@ def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=False,
         else:
             plt.plot(x[i],y[i],color=color[i])
 
-    
+
     set_paras(x_title, y_title, title, filename, file_dir, label)
 
 
 def plot_surface(x,y,z,title=None,x_title=None,y_title=None,z_title=None,label=None,filename=None,
         file_dir=''):
 
-    # some of the code from this function is given in the project 
+    # some of the code from this function is given in the project
 
     make_dir(file_dir)
-    
+
     fig = plt.figure()
     ax = plt.axes(projection ='3d')
-    
+
     surf = ax.plot_surface(x, y, z,cmap ='viridis',
                        linewidth=0, antialiased=False)
     ax.zaxis.set_major_locator(LinearLocator(10))

@@ -73,7 +73,7 @@ def plot_MSE_comparison(models, z_test, n_boots = 100, regression_method = 'ols'
     poly_degs = np.arange(n_pol)
     z_train = models[-1].z_train
 
-    MSE_dict = make_container(['pred','fit',resample_method],n_pol)
+    MSE_dict = make_container(['Test','Train',resample_method],n_pol)
 
     if resample_method == 'boot':
         for model in models:
@@ -83,32 +83,14 @@ def plot_MSE_comparison(models, z_test, n_boots = 100, regression_method = 'ols'
             model.end_boot()
 
             deg = model.polydeg
-            MSE_dict['pred'][deg] = np.mean([MSE(z_test, z_pred[:,i]) for i in range(n_boots)])
-            MSE_dict['fit'][deg] = np.mean([MSE(z_train, z_fit[:,i]) for i in range(n_boots)])
+            MSE_dict['Test'][deg] = np.mean([MSE(z_test, z_pred[:,i]) for i in range(n_boots)])
+            MSE_dict['Train'][deg] = np.mean([MSE(z_train, z_fit[:,i]) for i in range(n_boots)])
             MSE_dict[resample_method][deg] = np.mean([MSE(z_boot[:,i],z_boot_fit[:,i]) for i in range(n_boots)])
 
-        """ Does the same as the code above, but with Model.reduce_complexity method
-        for deg in poly_degs[::-1]:
-            # Loops backwards over polynomial degrees
-            # Reduces model complexity with one polynomial degree per iteration
-
-            z_boot,z_boot_fit = model.start_boot(n_boots, regression_method, predict_boot = True)
-            z_pred = model.boot_predict("test")
-            z_fit = model.boot_predict("train")
-            model.end_boot()
-
-            MSE_dict['pred'][deg] = np.mean([MSE(z_test, z_pred[:,i]) for i in range(n_boots)])
-            MSE_dict['fit'][deg] = np.mean([MSE(z_train, z_fit[:,i]) for i in range(n_boots)])
-            MSE_dict[resample_method][deg] = np.mean([MSE(z_boot[:,i],z_boot_fit[:,i]) for i in range(n_boots)])
-
-            # Reduces the complexity of the model
-            model.reduce_complexity()
-        """
 
     # Plots and saves plot of MSE comparisons
-    multi_yplot(poly_degs, MSE_dict.values(),("Testing","Training",resample_method + " data"), regression_method + " Mean Squared Error", "polynomial degree", "Score")
-    plt.savefig("plots/" + regression_method + " MSE_comp.pdf")
-    plt.show()
+    plot_2D([poly_degs,poly_degs,poly_degs], list(MSE_dict.values()), plot_count = 3, label = list(MSE_dict.keys()), title=regression_method + " MSE comparison ",x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf')
+
 
 
 def plot_scores_beta(models, z_test, regression_method='ols'):
@@ -117,11 +99,12 @@ def plot_scores_beta(models, z_test, regression_method='ols'):
     Plots Mean squared error, R2-score, and beta values
     The Beta plot uses features on the x-axis, but numbers can be used instead if (features_beta = False) '''
 
-    # model, poly_degs, score_dict, x_train, x_test, z_train, z_test = train_model(polydeg, x, z, ['MSE', 'R2'], regression_method)
     n_pol = models[-1].polydeg + 1
     poly_degs = np.arange(n_pol)
     ['MSE', 'R2']
     score_dict = make_container(['MSE', 'R2'], n_pol)
+    betas = []
+    beta_ranges = []
 
     for model in models:
         deg = model.polydeg
@@ -130,34 +113,11 @@ def plot_scores_beta(models, z_test, regression_method='ols'):
         score_dict['MSE'][deg] = MSE(z_test, z_pred)
         score_dict['R2'][deg] = R2(z_test, z_pred)
 
-        beta = model.beta
+        betas.append(model.beta)
+        beta_ranges.append(range(model.feature_count))
 
-        plt.plot(np.arange(len(beta)), beta, label = "Degree %d" % deg)
-
-    """ Does the same as the code above, but with Model.reduce_complexity method
-    for deg in poly_degs[::-1]:
-        # Loops backwards over polynomial degrees
-        # Fits model to training data
-        # Makes prediction for z, and compares to test data with MSE and R squared
-        #model.fit(X_train, z_train)
-        z_pred = model.predict("test")
-        score_dict['MSE'][deg] = MSE(z_test, z_pred)
-        score_dict['R2'][deg] = R2(z_test, z_pred)
-
-        # Collects beta from the model
-        # Makes overlapping plots of beta, one for each polynomial degree
-        beta = model.choose_beta(model.X_dict["train"], model.z_train, regression_method)
-
-        plt.plot(np.arange(len(beta)), beta, label = "Degree %d" % deg)
-
-        # Reduces the complexity of the model
-        # Stops the loop if the model complexity cannot be reduced further
-        model.reduce_complexity()
-    """
-    # Saves the overlapping Beta plots to file
-
-    set_paras(title="Beta " + regression_method + " for different amounts of features",x_title='Features',y_title='Beta',
-        filename = regression_method + ' beta.pdf', file_dir='plots')
+    # Plots beta vectors for each polynomial degree, with number of features on x-axis
+    plot_2D(beta_ranges, betas, plot_count = len(betas), title=regression_method + " beta ",x_title="features",y_title="Beta",filename= regression_method + ' beta.pdf')
 
     # Plots R2 score over polynomial degrees
     plot_2D([poly_degs], [score_dict['R2']], title=regression_method + " R$^2$ Score ",x_title="polynomial degree",y_title="R2",filename= regression_method + ' R2.pdf')
