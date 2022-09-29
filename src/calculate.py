@@ -25,11 +25,6 @@ def MSE(z_test, z_pred):
     """
     return np.mean( np.mean((z_test - z_pred)**2, keepdims=True) )
 
-def MSE2(y_data,y_model):
-    n = np.size(y_model)
-    return np.sum((y_data-y_model)**2)/n
-
-
 
 def cal_bias(z_test, z_pred):
     """computes the bias for a given prediction

@@ -1,6 +1,6 @@
 import numpy as np
 
-from poly_funcs import get_2D_pols, get_poly_index
+from poly_funcs import get_2D_pols
 from calculate import MSE, R2
 from transform import bootstrap
 
@@ -13,8 +13,8 @@ class Model(object):
         # Saves integers describing polynomial degree and number of features
         # Takes training data, saves z_train the design matrix X_train
         self.polydeg = polydeg
-        self.feature_count = get_poly_index(self.polydeg) + 1
         self.functions = get_2D_pols(self.polydeg)
+        self.feature_count = len(self.functions)
         self.datapoints = len(z_train)
         self.z_train = z_train
         self.X_dict = {train_name:self.design(x_train)}
@@ -148,24 +148,3 @@ class Model(object):
         # Makes a prediction for z for the given design matrix
         X = self.X_dict[name]
         return np.dot(X,self.beta)
-
-""" Not being used atm
-    def reduce_complexity(self):
-        # Removes the features corresponding to the largest polynomial power
-        # Resets beta as the fit is no longer valid
-        # Return boolean describing whether reduction was successful
-
-        if (self.polydeg == 0):
-            # Stops program from reducing complexity when no longer possible
-            return False
-
-        self.end_boot()
-        self.polydeg -= 1
-        self.feature_count = get_poly_index(self.polydeg) + 1
-
-        self.functions = self.functions[:self.feature_count]
-        for name, mat in self.X_dict.items():
-            self.X_dict[name] = mat[:,:self.feature_count]
-        self.beta = self.find_beta_ols(self.X_dict["train"],self.z_train)
-        return True
-"""

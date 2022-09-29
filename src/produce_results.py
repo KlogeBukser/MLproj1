@@ -1,7 +1,6 @@
 
 from plotting import *
 from calculate import *
-from poly_funcs import *
 from transform import *
 from model import *
 
@@ -26,38 +25,14 @@ def produce_error(data, model):
 
     return mse_err, r2_err
 
-""" Not needed atm
-def train_model(polydeg, x, z, container_names, method):
-
-    '''prepare data for training and testing as well as
-    training the model'''
-
-    # Number of relevant polynomial degrees (it includes 0)
-    n_pol = polydeg + 1
-    poly_degs = np.arange(n_pol)
-
-
-    # Split into training and testing data
-    x_train, x_test, z_train, z_test = train_test_split(x,z)
-
-
-    # Makes a model that
-    # -Holds polynomial features
-    # -Constructs and holds design matrix, and training z
-    # -Fits the model by finding and saving beta
-    model = Model(polydeg,x_train,z_train, regression_method=method)
-
-    # Adds the testing data x_test to the dictionary with key "test"
-    model.add_x(x_test, "test")
-
-    # Empty containers for MSE values
-    container_dict = {}
-    for name in container_names:
-        container_dict[name] = np.zeros(n_pol)
-
-    return model, poly_degs, container_dict, x_train, x_test, z_train, z_test
-"""
 def make_container(container_names,n_pol):
+    """ Makes empty dictionary container
+
+    :container_names: list<String> of names
+    :n_pol: int, number of polynomial degrees
+    :returns: dictionary
+
+    """
     container_dict = {}
     for name in container_names:
         container_dict[name] = np.zeros(n_pol)
