@@ -105,7 +105,7 @@ class Model(object):
         return beta
 
 
-    def start_boot(self, n_boots, predict_boot = False, regression_method='ols'):
+    def start_boot(self, n_boots, regression_method='ols', predict_boot = False):
         self.n_boots = n_boots
         self.boot_betas = np.empty((self.feature_count, n_boots))
 
