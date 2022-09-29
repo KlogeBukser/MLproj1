@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from generate import *
+from generate import generate_data_Franke
 from produce_results import *
 
-np.random.seed(1) # ??
+np.random.seed(1) # To have better control of what the plots are supposed to look like
 
 
 # choose regression methods
@@ -28,17 +28,15 @@ polydeg = 5
 x, z = generate_data_Franke(20,noise = 0.5)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 
-# Makes model, and feeds it the testing data (x_test) for predictions
-model = Model(polydeg, x_train, z_train, regression_method=regression_method)
-model.add_x(x_test,"test")
+# Makes models, and feeds them the testing data (x_test) for predictions
+models = []
+for deg in range(polydeg + 1):
+    models.append(Model(deg, x_train, z_train, regression_method = regression_method))
+    models[deg].add_x(x_test,"test")
 
 # choose desired plots
-plot_MSEs(model, z_test, regression_method=regression_method) # plots MSE as a function of polynomial degrees for both no resampling and bootstrap
+plot_MSEs(models, z_test, regression_method=regression_method) # plots MSE as a function of polynomial degrees for both no resampling and bootstrap
 
 
-""" Extra model until restructure """
-model2 = Model(polydeg, x_train, z_train, regression_method=regression_method)
-model2.add_x(x_test,"test")
-
-#this dones't work for lasso since there's no analytical expression for beta_lasso
-plot_scores_beta(model2,z_test,regression_method=regression_method) # plots beta, R2 scores and MSE as a function of features
+#this doesn't work for lasso since there's no analytical expression for beta_lasso
+plot_scores_beta(models,z_test,regression_method=regression_method) # plots beta, R2 scores and MSE as a function of features

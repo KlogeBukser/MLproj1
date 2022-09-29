@@ -26,6 +26,7 @@ def produce_error(data, model):
 
     return mse_err, r2_err
 
+""" Not needed atm
 def train_model(polydeg, x, z, container_names, method):
 
     '''prepare data for training and testing as well as
@@ -55,23 +56,38 @@ def train_model(polydeg, x, z, container_names, method):
         container_dict[name] = np.zeros(n_pol)
 
     return model, poly_degs, container_dict, x_train, x_test, z_train, z_test
+"""
+def make_container(container_names,n_pol):
+    container_dict = {}
+    for name in container_names:
+        container_dict[name] = np.zeros(n_pol)
+    return container_dict
 
-
-def plot_MSE_comparison(model, z_test, n_boots = 100, regression_method = 'ols', resample_method='boot'):
+def plot_MSE_comparison(models, z_test, n_boots = 100, regression_method = 'ols', resample_method='boot'):
     ''' Makes models for every polynomial degree up to the input
     Uses bootstrap method for resampling
     Plots MSE on the Test data, entire Training data, and bootstrap samples '''
 
     # model, poly_degs, MSE_dict, x_train, x_test, z_train, z_test = train_model(polydeg, x, z, ['pred','fit',resample_method], regression_method)
-    n_pol = model.polydeg + 1
+    n_pol = models[-1].polydeg + 1
     poly_degs = np.arange(n_pol)
-    z_train = model.z_train
+    z_train = models[-1].z_train
 
-    MSE_dict = {}
-    for name in ['pred','fit',resample_method]:
-        MSE_dict[name] = np.zeros(n_pol)
+    MSE_dict = make_container(['pred','fit',resample_method],n_pol)
 
     if resample_method == 'boot':
+        for model in models:
+            z_boot,z_boot_fit = model.start_boot(n_boots, regression_method, predict_boot = True)
+            z_pred = model.boot_predict("test")
+            z_fit = model.boot_predict("train")
+            model.end_boot()
+
+            deg = model.polydeg
+            MSE_dict['pred'][deg] = np.mean([MSE(z_test, z_pred[:,i]) for i in range(n_boots)])
+            MSE_dict['fit'][deg] = np.mean([MSE(z_train, z_fit[:,i]) for i in range(n_boots)])
+            MSE_dict[resample_method][deg] = np.mean([MSE(z_boot[:,i],z_boot_fit[:,i]) for i in range(n_boots)])
+
+        """ Does the same as the code above, but with Model.reduce_complexity method
         for deg in poly_degs[::-1]:
             # Loops backwards over polynomial degrees
             # Reduces model complexity with one polynomial degree per iteration
@@ -87,7 +103,7 @@ def plot_MSE_comparison(model, z_test, n_boots = 100, regression_method = 'ols',
 
             # Reduces the complexity of the model
             model.reduce_complexity()
-
+        """
 
     # Plots and saves plot of MSE comparisons
     multi_yplot(poly_degs, MSE_dict.values(),("Testing","Training",resample_method + " data"), regression_method + " Mean Squared Error", "polynomial degree", "Score")
@@ -95,20 +111,30 @@ def plot_MSE_comparison(model, z_test, n_boots = 100, regression_method = 'ols',
     plt.show()
 
 
-def plot_scores_beta(model, z_test, regression_method='ols'):
+def plot_scores_beta(models, z_test, regression_method='ols'):
 
     '''Produces plot(s) for measuring quality of 2D polynomial model
     Plots Mean squared error, R2-score, and beta values
     The Beta plot uses features on the x-axis, but numbers can be used instead if (features_beta = False) '''
 
     # model, poly_degs, score_dict, x_train, x_test, z_train, z_test = train_model(polydeg, x, z, ['MSE', 'R2'], regression_method)
-    n_pol = model.polydeg + 1
+    n_pol = models[-1].polydeg + 1
     poly_degs = np.arange(n_pol)
     ['MSE', 'R2']
-    score_dict = {}
-    for name in ['MSE', 'R2']:
-        score_dict[name] = np.zeros(n_pol)
+    score_dict = make_container(['MSE', 'R2'], n_pol)
 
+    for model in models:
+        deg = model.polydeg
+
+        z_pred = model.predict("test")
+        score_dict['MSE'][deg] = MSE(z_test, z_pred)
+        score_dict['R2'][deg] = R2(z_test, z_pred)
+
+        beta = model.beta
+
+        plt.plot(np.arange(len(beta)), beta, label = "Degree %d" % deg)
+
+    """ Does the same as the code above, but with Model.reduce_complexity method
     for deg in poly_degs[::-1]:
         # Loops backwards over polynomial degrees
         # Fits model to training data
@@ -127,7 +153,7 @@ def plot_scores_beta(model, z_test, regression_method='ols'):
         # Reduces the complexity of the model
         # Stops the loop if the model complexity cannot be reduced further
         model.reduce_complexity()
-
+    """
     # Saves the overlapping Beta plots to file
 
     set_paras(title="Beta " + regression_method + " for different amounts of features",x_title='Features',y_title='Beta',
@@ -143,34 +169,36 @@ def plot_bias_var(is_resemble=False, resample_method=None):
 
     pass
 
-def plot_MSEs(model, z_test, n_boots=100, nlambdas=100, regression_method='ols', resample_method='boot'):
+def plot_MSEs(models, z_test, n_boots=100, nlambdas=100, regression_method='ols', resample_method='boot'):
 
     print("Regression method : ", regression_method)
     assert regression_method in ALLOWED_METHODS, ERR_INVALID_METHOD
 
     if regression_method == 'lasso':
-        plot_MSE_lasso(model, z_test, nlambdas) # does nothing rn
+        plot_MSE_lasso(models, z_test, nlambdas) # does nothing rn
 
     else:
-        plot_MSE_comparison(model, z_test, regression_method=regression_method)
+        plot_MSE_comparison(models, z_test, regression_method=regression_method)
 
 
-def plot_MSE_lasso(model, z_test, nlambdas):
+def plot_MSE_lasso(models, z_test, nlambdas):
 
     '''problematic shit!!'''
 
-    z_train = model.z_train
-    MSE_lasso_predicts = np.zeros(nlambdas)
-    lambdas = np.logspace(-4, 4, nlambdas)
-    X_train = model.X_dict["train"]
-    X_test = model.X_dict["test"]
+    z_train = model[-1].z_train
+    poly_degs = np.arange(models[-1].polydeg + 1)
+    for model in models:
+        MSE_lasso_predicts = np.zeros(nlambdas)
+        lambdas = np.logspace(-4, 4, nlambdas)
+        X_train = model.X_dict["train"]
+        X_test = model.X_dict["test"]
 
-    for lamb in range(nlambdas):
-        reg_lasso = linear_model.Lasso(lamb)
-        reg_lasso.fit(X_train, z_train)
-        z_predict_lasso = reg_lasso.predict(whatever)
-        print(reg_lasso.coef_)
-        MSE_lasso_predicts[lamb] = MSE(z_test,z_predict_lasso)
+        for lamb in lambdas:
+            reg_lasso = linear_model.Lasso(lamb)
+            reg_lasso.fit(X_train, z_train)
+            z_predict_lasso = reg_lasso.predict(whatever)
+            print(reg_lasso.coef_)
+            MSE_lasso_predicts[lamb] = MSE(z_test,z_predict_lasso)
 
     plot_2D([polydeg], [MSE_lasso_predicts], title='Lasso MSE', x_title='polynomial degrees',
             y_title='MSE', filename='lasso MSE')
