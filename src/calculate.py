@@ -1,57 +1,47 @@
 import numpy as np
 
+def R2(z_test,z_pred):
+    """computes the mean squared error for a given prediction
 
-def sq_diff(a,b):
-    # Helper function for error models
-    return sum([(a[i] - b[i])**2 for i in range(len(a))])
+    :z_test: array-like
+    :z_pred: array-like
+    :returns: R squared score
 
-# def MSE(y_data,y_model):
-    # # First param is from the data set. Second param is from model
-    # n = len(y_data)
-    # return sq_diff(y_data,y_model)/n
+    """
+    n = len(z_test)
+    avg = np.mean(z_test)*np.ones(n)
 
-
-def R2(y_data,y_model):
-    # Finds R squared score
-    n = len(y_data)
-    avg = np.mean(y_data)*np.ones(n)
-    return 1 - sq_diff(y_data,y_model)/sq_diff(y_data,avg)
-
-
+    return 1 - np.mean((z_test - z_pred)**2)/np.mean((z_test - avg)**2)
 
 
 # some of these are from lecture notes with modification
-def MSE(y_test, y_pred):
+def MSE(z_test, z_pred):
     """computes the mean squared error for a given prediction
 
-    :y_test: TODO
-    :y_pred: TODO
-    :returns: TODO
+    :z_test: array-like
+    :z_pred: array-like
+    :returns: Mean squared error
 
     """
-    return np.mean( np.mean((y_test - y_pred)**2, keepdims=True) )
+    return np.mean( np.mean((z_test - z_pred)**2, keepdims=True) )
 
 
-def cal_bias(y_test, y_pred):
+def cal_bias(z_test, z_pred):
     """computes the bias for a given prediction
 
-    :y_test: array like
-    :y_pred: array like
+    :z_test: array-like
+    :z_pred: array-like
     :returns: bias
 
     """
-    return np.mean( (y_test - np.mean(y_pred, keepdims=True))**2 )
+    return np.mean( (z_test - np.mean(z_pred, keepdims=True))**2 )
 
-def cal_variance(y_test, y_pred):
+def cal_variance(z_test, z_pred):
     """computes the variance for a given prediction
 
-    :y_test: array-like
-    :y_pred: array-like
+    :z_test: array-like
+    :z_pred: array-like
     :returns: variance
 
     """
-    return np.mean( np.var(y_pred, keepdims=True) )
-    
-
-
-
+    return np.mean( np.var(z_pred, keepdims=True) )

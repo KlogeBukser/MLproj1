@@ -1,7 +1,7 @@
 import numpy as np
 
 from poly_funcs import get_2D_pols, get_2D_string, get_poly_index
-from calculate import sq_diff, MSE, R2
+from calculate import MSE, R2
 from transform import bootstrap
 
 
@@ -130,7 +130,7 @@ class Model(object):
             # Saves the beta values for each bootstrap sample
             for i in range(n_boots):
                 X_, z_ = bootstrap(self.X_dict["train"],self.z)
-                self.boot_betas[:,i] = self.find_beta_ols(X_, z_)
+                self.boot_betas[:,i] = self.choose_beta(X_, z_,regression_method)
 
     def boot_predict(self,name):
         X = self.X_dict[name]
