@@ -16,10 +16,9 @@ class Model(object):
         self.feature_count = get_poly_index(self.polydeg) + 1
         self.functions = get_2D_pols(self.polydeg)
         self.datapoints = len(z_train)
-        self.z = z_train
+        self.z_train = z_train
         self.X_dict = {train_name:self.design(x_train)}
-        # self.beta = self.find_beta_ols(self.X_dict["train"], self.z)
-        self.beta = self.choose_beta(self.X_dict["train"], self.z, regression_method)
+        self.beta = self.choose_beta(self.X_dict["train"], self.z_train, regression_method)
 
 
     def find_beta_ols(self,X,y):
@@ -116,7 +115,7 @@ class Model(object):
             z_boots = np.empty((self.datapoints,self.n_boots))
             z_boots_fit = np.copy(z_boots)
             for i in range(n_boots):
-                X_, z_ = bootstrap(self.X_dict["train"],self.z)
+                X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
 
                 beta = self.choose_beta(X_, z_, regression_method)
 
@@ -129,7 +128,7 @@ class Model(object):
         else:
             # Saves the beta values for each bootstrap sample
             for i in range(n_boots):
-                X_, z_ = bootstrap(self.X_dict["train"],self.z)
+                X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
                 self.boot_betas[:,i] = self.choose_beta(X_, z_,regression_method)
 
     def boot_predict(self,name):
@@ -177,5 +176,5 @@ class Model(object):
         self.functions = self.functions[:self.feature_count]
         for name, mat in self.X_dict.items():
             self.X_dict[name] = mat[:,:self.feature_count]
-        self.beta = self.find_beta_ols(self.X_dict["train"],self.z)
+        self.beta = self.find_beta_ols(self.X_dict["train"],self.z_train)
         return True
