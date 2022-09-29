@@ -146,7 +146,7 @@ def plot_MSEs(x, z, polydeg=5, n_boots=100, nlambdas=100, regression_method='ols
     poly_degs = np.arange(n_pol)
 
     if regression_method == 'lasso':
-        plot_lasso(x,z,polydeg,nlambdas) # does nothing rn
+        plot_MSE_lasso(x,z,polydeg,nlambdas) # does nothing rn
         
     else:
         plot_MSE_comparison(x,z,polydeg,regression_method=regression_method)
@@ -154,13 +154,22 @@ def plot_MSEs(x, z, polydeg=5, n_boots=100, nlambdas=100, regression_method='ols
 
 def plot_MSE_lasso(x,z,polydeg,nlambdas):
 
-    MSELassoPredict = np.zeros(nlambdas)
+    '''problematic shit!!'''
+    x_train, x_test, z_train, z_test = train_test_split(x,z,test_size=0.2)
 
-    for i in range(nlambdas):
-        pass
+    MSE_lasso_predicts = np.zeros(nlambdas)
+    lambdas = np.logspace(-4, 4, nlambdas)
 
+    temp_model = Model(polydeg, x_train, z_train)
+    X = temp_model.design(x_train)
+    whatever = temp_model.design(x_test)
 
+    for lamb in range(nlambdas):
+        reg_lasso = linear_model.Lasso(lamb)
+        reg_lasso.fit(X,z_train)
+        z_predict_lasso = reg_lasso.predict(whatever)
+        print(reg_lasso.coef_)
+        MSE_lasso_predicts[lamb] = MSE(z_test,z_predict_lasso)
 
-
-
-
+    plot_2D([polydeg], [MSE_lasso_predicts], title='Lasso MSE', x_title='polynomial degrees', 
+            y_title='MSE', filename='lasso MSE')

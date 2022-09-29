@@ -42,10 +42,11 @@ def title_axlabs(title,xlab,ylab):
     plt.xlabel(xlab)
     plt.ylabel(ylab)
 
-def set_paras(x_title,y_title,title=None,filename=None,file_dir='plots'):
+def set_paras(x_title,y_title,title=None,filename=None,file_dir='plots',has_label=False):
 
     '''set all the parameters in the figure and save files'''
-    plt.legend()
+    if has_label:
+        plt.legend()
     plt.xlabel(x_title)
     plt.ylabel(y_title)
     plt.title(title)
@@ -73,7 +74,7 @@ def make_dir(file_dir):
         if not os.path.exists(file_dir):
             os.mkdir(file_dir)
 
-def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=None,filename=None,
+def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=False,filename=None,
         file_dir='plots',color=COLORS):
 
     '''plots inputs: x:array like of array like, y:array like of array likes, 
@@ -87,10 +88,10 @@ def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=None,f
         if label:
             plt.plot(x[i],y[i],label=label[i],color=color[i])
         else:
-            plt.plot(x[i],y[i],label=label,color=color[i])
+            plt.plot(x[i],y[i],color=color[i])
 
     
-    set_paras(x_title, y_title, title, filename, file_dir)
+    set_paras(x_title, y_title, title, filename, file_dir, label)
 
 
 def plot_surface(x,y,z,title=None,x_title=None,y_title=None,z_title=None,label=None,filename=None,
