@@ -21,19 +21,9 @@ class Model(object):
         self.beta = self.choose_beta(self.X_dict["train"], self.z_train, regression_method)
 
 
-    def find_beta_ols(self,X,y):
+    def find_beta_ols(self, X, y):
         ''' Finds beta using OLS '''
-        square = np.dot(X.T,X)                      #nf*nf
-        if np.linalg.det(square):
-            inv = np.linalg.inv(square)             #nf*nf
-
-        else:
-            # psuedoinversion for singular matrices
-            inv = np.linalg.pinv(square)
-
-        beta = np.dot(np.dot(inv,X.T),y)        #nf*1
-
-        return beta
+        return self.find_beta_ridge(X, y, 0)
 
 
     def find_beta_ridge(self, X, y, lamb):
@@ -63,7 +53,7 @@ class Model(object):
             try:
                 lamb = float(lamb_range)
             except:
-                'For single lambda use interger for lamb_range'
+                'For single lambda use integer for lamb_range'
 
             return self.find_beta_ridge(X, y, lamb_range)
 
@@ -139,18 +129,17 @@ class Model(object):
         return z_pred
 
     def end_boot(self):
-        self.n_boots = 0
-        self.boot_betas = 0
+        self.n_boots = None
+        self.boot_betas = None
 
     def design(self,x):
         # Uses the features to turn set of tuple values (x,y) into design matrix
 
         n = x.shape[0]
-        n_funcs = len(self.functions)
-        design = np.ones((n, n_funcs))
+        design = np.ones((n, self.feature_count))
 
         for i in range(n):
-            for j in range(n_funcs):
+            for j in range(self.feature_count):
                 design[i,j] = self.functions[j](x[i])
 
         return design
@@ -160,6 +149,7 @@ class Model(object):
         X = self.X_dict[name]
         return np.dot(X,self.beta)
 
+""" Not being used atm
     def reduce_complexity(self):
         # Removes the features corresponding to the largest polynomial power
         # Resets beta as the fit is no longer valid
@@ -178,3 +168,4 @@ class Model(object):
             self.X_dict[name] = mat[:,:self.feature_count]
         self.beta = self.find_beta_ols(self.X_dict["train"],self.z_train)
         return True
+"""
