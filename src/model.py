@@ -51,6 +51,8 @@ class Algorithms:
         :resampling_method: string
 
         """
+        if self.resampling_method == 'none':
+            self.resample = self.none_resample
 
         if self.resampling_method == 'boot':
             self.resample = self.boot_resample
@@ -122,6 +124,10 @@ class Algorithms:
             return True
         return False
 
+    def none_resample(self, X, z, n_res):
+        beta = self.find_beta(X,z)
+        return beta
+
     def boot_resample(self, X, z, n_res):
         #res_meth = self.resampling_method
         betas = np.empty((X.shape[1], n_res))
@@ -133,7 +139,6 @@ class Algorithms:
             betas[:,i] = self.find_beta(X_, z_)
 
         return betas
-
 
 
     def one_boot(self, X, z):
@@ -165,7 +170,8 @@ class Model:
 
         # NEW, unstable
         self.algorithms = Algorithms(regression_method, resampling_method)
-        self.beta = self.algorithms.resample(self.X_dict["train"],self.z_train,n_res)
+        self.n_res = n_res
+        self.betas = self.algorithms.resample(self.X_dict["train"],self.z_train,n_res)
 
 
     def design(self,x):
@@ -183,6 +189,9 @@ class Model:
     def predict(self,name):
         # Makes a prediction for z for the given design matrix
         X = self.X_dict[name]
+        if self.res_method == 'none':
+            return np.dot(X,self.betas)
+
         z_pred = np.empty((X.shape[0],self.n_res))
         for i in range(self.n_res):
             z_pred[:,i] = np.dot(X,self.betas[:,i])
@@ -191,56 +200,3 @@ class Model:
 
     def add_x(self,x,name):
         self.X_dict[name] = self.design(x)
-
-    def temple(self):
-        X_train = self.X_dict["train"]
-        z_train = self.z_train
-        X_ = np.empty(X_train.shape)
-        z_ = np.empty(z_train.shape)
-        n_z = len(z_train)
-        for s in range(n_z):
-            r_int = np.random.randint(n_z)
-            X_[s,:] = X_train[r_int,:]
-            z_[s] = z_train[r_int]
-        return X_, z_
-
-
-
-    def start_boot(self, n_boots, predict_boot = False):
-        self.n_boots = n_boots
-        self.boot_betas = np.empty((self.feature_count, n_boots))
-
-        if (predict_boot):
-            # This option returns the boot sample for z, and its prediction on X boot
-            # Only use this option if you want these values
-            z_boots = np.empty((len(self.z_train),self.n_boots))
-            z_boots_fit = np.copy(z_boots)
-
-            for i in range(n_boots):
-
-                X_, z_ = self.temple()
-
-                beta = self.algorithms.find_beta(X_, z_)
-
-                self.boot_betas[:,i] = beta
-                z_boots[:,i] = z_
-                z_boots_fit[:,i] = np.dot(X_, beta)
-
-            return z_boots, z_boots_fit
-
-        else:
-            # Saves the beta values for each bootstrap sample
-            for i in range(n_boots):
-                X_, z_ = self.temple()
-                self.boot_betas[:,i] = self.algorithms.find_beta(X_, z_)
-
-    def boot_predict(self,name):
-        X = self.X_dict[name]
-        z_pred = np.empty((X.shape[0],self.n_boots))
-        for i in range(self.n_boots):
-            z_pred[:,i] = np.dot(X,self.boot_betas[:,i])
-        return z_pred
-
-    def end_boot(self):
-        self.n_boots = None
-        self.boot_betas = None
