@@ -13,6 +13,7 @@ class Algorithms:
         self.resampling_method = resampling_method
 
         self.assign_algos()
+        self.assign_resample()
 
 
     def check_health(self):
@@ -50,13 +51,16 @@ class Algorithms:
         :resampling_method: string
 
         """
+
         if self.resampling_method == 'boot':
-            pass
+            self.resample = self.boot_resample
+            """
             self.start_resample = self.start_boot
             self.resample_predict = self.boot_predict
             self.end_resample = self.end_boot
+            """
 
-        if self.resampling_method == 'cross':
+        elif self.resampling_method == 'cross':
             pass
             # self.resample = self.cross
 
@@ -118,11 +122,34 @@ class Algorithms:
             return True
         return False
 
+    def boot_resample(self, X, z, n_res):
+        #res_meth = self.resampling_method
+        betas = np.empty((X.shape[1], n_res))
+        z_res = np.empty((len(z), n_res))
+        z_res_fit = np.copy(z_res)
+
+        for i in range(n_res):
+            X_, z_ = self.one_boot(X,z)
+            betas[:,i] = self.find_beta(X_, z_)
+
+        return betas
+
+
+
+    def one_boot(self, X, z):
+        X_ = np.empty(X.shape)
+        z_ = np.empty(z.shape)
+        n_z = len(z_)
+        for s in range(n_z):
+            r_int = np.random.randint(n_z)
+            X_[s,:] = X[r_int,:]
+            z_[s] = z[r_int]
+        return X_, z_
 
 class Model:
     """Regression model"""
 
-    def __init__(self,polydeg,x_train,z_train, train_name = "train", regression_method='ols', resampling_method='none'):
+    def __init__(self,polydeg,x_train,z_train, train_name = "train", regression_method='ols', resampling_method='none', n_res = 1):
         # Collects the feature functions for a "2 variable polynomial of given degree"
         # Saves integers describing polynomial degree and number of features
         # Takes training data, saves z_train the design matrix X_train
@@ -138,7 +165,8 @@ class Model:
 
         # NEW, unstable
         self.algorithms = Algorithms(regression_method, resampling_method)
-        self.beta = self.algorithms.find_beta(self.X_dict["train"],self.z_train)
+        self.beta = self.algorithms.resample(self.X_dict["train"],self.z_train,n_res)
+
 
     def design(self,x):
         # Uses the features to turn set of tuple values (x,y) into design matrix
@@ -155,13 +183,16 @@ class Model:
     def predict(self,name):
         # Makes a prediction for z for the given design matrix
         X = self.X_dict[name]
-        return np.dot(X,self.beta)
+        z_pred = np.empty((X.shape[0],self.n_res))
+        for i in range(self.n_res):
+            z_pred[:,i] = np.dot(X,self.betas[:,i])
+        return z_pred
 
 
     def add_x(self,x,name):
         self.X_dict[name] = self.design(x)
 
-    def boot_resample(self):
+    def temple(self):
         X_train = self.X_dict["train"]
         z_train = self.z_train
         X_ = np.empty(X_train.shape)
@@ -187,7 +218,7 @@ class Model:
 
             for i in range(n_boots):
 
-                X_, z_ = self.boot_resample()
+                X_, z_ = self.temple()
 
                 beta = self.algorithms.find_beta(X_, z_)
 
@@ -200,7 +231,7 @@ class Model:
         else:
             # Saves the beta values for each bootstrap sample
             for i in range(n_boots):
-                X_, z_ = self.boot_resample()
+                X_, z_ = self.temple()
                 self.boot_betas[:,i] = self.algorithms.find_beta(X_, z_)
 
     def boot_predict(self,name):

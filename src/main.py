@@ -22,7 +22,7 @@ resampling_method = 'boot'
 # resampling_method = 'cross'
 
 # Max polynomial degree
-polydeg = 8
+polydeg = 5
 n_boots = 5
 
 # Generates data, and splits it
@@ -32,25 +32,25 @@ x_train, x_test, z_train, z_test = train_test_split(x,z)
 # Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
 models = []
 for deg in range(polydeg + 1):
-    models.append(Model(deg, x_train, z_train, regression_method = regression_method))
+    models.append(Model(deg, x_train, z_train, resampling_method=resampling_method, regression_method = regression_method, n_res = n_boots))
     models[deg].add_x(x_test,"test")
 
 
 """This block of code is under development, but functional
 It finds the z predictions first, and use those to find MSE (and eventually other stuff)
 Atm it does the same as just calling plot_MSEs
-"""
+
 prediction_names = ["train","test"]
 predictions = make_predictions_boot(models,prediction_names,n_boots = n_boots)
 data = make_container(prediction_names)
 data["train"] = z_train
 data["test"] = z_test
 plot_MSE_comparison2(data, predictions, regression_method = regression_method)
-
+"""
 
 # choose desired plots
 plot_MSEs(models, z_test, regression_method=regression_method) # plots MSE as a function of polynomial degrees for both no resampling and bootstrap
 
 
 #this doesn't work for lasso since there's no analytical expression for beta_lasso
-#plot_scores_beta(models,z_test,regression_method=regression_method) # plots beta, R2 scores and MSE as a function of features
+plot_scores_beta(models,z_test,regression_method=regression_method) # plots beta, R2 scores and MSE as a function of features
