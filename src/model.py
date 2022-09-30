@@ -27,7 +27,7 @@ class Algorithms:
     def assign_algos(self):
 
         self.check_health()
-        
+
         self.assign_reg()
         # self.assign_resample()
 
@@ -41,11 +41,11 @@ class Algorithms:
         if self.resampling_method == 'boot':
             pass
             # self.resample = self.bootstrap
-        
+
         if self.resampling_method == 'cross':
             pass
             # self.resample = self.cross
-        
+
 
     def assign_resample(self):
         """assign the correct resampling_method to self.resample
@@ -55,7 +55,7 @@ class Algorithms:
         """
         if self.regression_method == 'ols':
             self.find_beta = self.find_beta_ols
-        
+
         if self.regression_method == 'ridge':
             self.find_beta = self.best_ridge_beta
 
@@ -125,7 +125,7 @@ class Algorithms:
         if (predict_boot):
             # This option returns the boot sample for z, and its prediction on X boot
             # Only use this option if you want these values
-            z_boots = np.empty((self.datapoints,self.n_boots))
+            z_boots = np.empty((len(self.z_train),self.n_boots))
             z_boots_fit = np.copy(z_boots)
             for i in range(n_boots):
                 X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
@@ -166,7 +166,6 @@ class Model:
         self.polydeg = polydeg
         self.functions = get_2D_pols(self.polydeg)
         self.feature_count = len(self.functions)
-        self.datapoints = len(z_train)
         self.z_train = z_train
         self.X_dict = {train_name:self.design(x_train)}
         self.beta = self.choose_beta(self.X_dict["train"], self.z_train, regression_method)
@@ -257,7 +256,7 @@ class Model:
         if (predict_boot):
             # This option returns the boot sample for z, and its prediction on X boot
             # Only use this option if you want these values
-            z_boots = np.empty((self.datapoints,self.n_boots))
+            z_boots = np.empty((len(self.z_train),self.n_boots))
             z_boots_fit = np.copy(z_boots)
             for i in range(n_boots):
                 X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
