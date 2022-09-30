@@ -12,20 +12,9 @@ def split_scale(X,z):
 
     return X_train, X_test, z_train, z_test
 
-def bootstrap(X,z):
-    n = len(z)
-    X_ = np.empty(X.shape)
-    z_ = np.empty(n)
-
-    for i in range(n):
-        r_int = np.random.randint(n)
-        X_[i,:] = X[r_int,:]
-        z_[i] = z[r_int]
-
-    return X_, z_
 
 def cross_valid(X,z): # not finished
-    
+
     n = len(z)
     X_ = np.empty(X.shape)
     z_ = np.empty(n)

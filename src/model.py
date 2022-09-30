@@ -2,7 +2,6 @@ import numpy as np
 
 from poly_funcs import get_2D_pols
 from calculate import MSE, R2
-from transform import bootstrap
 
 class Algorithms:
 
@@ -249,6 +248,17 @@ class Model:
 
         return beta
 
+    def boot_resample(self):
+        X_train = self.X_dict["train"]
+        z_train = self.z_train
+        X_ = np.empty(X_train.shape)
+        z_ = np.empty(z_train.shape)
+        n_z = len(z_train)
+        for s in range(n_z):
+            r_int = np.random.randint(n_z)
+            X_[s,:] = X_train[r_int,:]
+            z_[s] = z_train[r_int]
+        return X_, z_
 
     def start_boot(self, n_boots, predict_boot = False):
         self.n_boots = n_boots
@@ -259,8 +269,10 @@ class Model:
             # Only use this option if you want these values
             z_boots = np.empty((len(self.z_train),self.n_boots))
             z_boots_fit = np.copy(z_boots)
+
             for i in range(n_boots):
-                X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
+
+                X_, z_ = self.boot_resample()
 
                 beta = self.choose_beta(X_, z_)
 
@@ -273,7 +285,7 @@ class Model:
         else:
             # Saves the beta values for each bootstrap sample
             for i in range(n_boots):
-                X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
+                X_, z_ = self.boot_resample()
                 self.boot_betas[:,i] = self.choose_beta(X_, z_)
 
     def boot_predict(self,name):
