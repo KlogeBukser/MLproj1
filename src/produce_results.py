@@ -25,7 +25,7 @@ def produce_error(data, model):
 
     return mse_err, r2_err
 
-def make_container(container_names,n_pol):
+def make_container(container_names,n_pol = None):
     """ Makes empty dictionary container
 
     :container_names: list<String> of names
@@ -34,9 +34,51 @@ def make_container(container_names,n_pol):
 
     """
     container_dict = {}
-    for name in container_names:
-        container_dict[name] = np.zeros(n_pol)
+    if n_pol is None:
+        for name in container_names:
+            container_dict[name] = []
+    else:
+        for name in container_names:
+            container_dict[name] = np.empty(n_pol)
+
     return container_dict
+
+def make_predictions_boot(models,prediction_names,n_boots = 100):
+    """ Uses bootstrap method to find predictions (z_pred,z_fit, etc)
+    :models:
+    :n_boots:
+    :prediction_names:
+    :regression_method:
+    :return:
+    """
+    predictions = make_container(prediction_names)
+    for model in models:
+        model.start_boot(n_boots, predict_boot = False)
+        for name in prediction_names:
+            predictions[name].append(model.boot_predict(name))
+        model.end_boot()
+    return predictions
+
+
+def plot_MSE_comparison2(z_data, z_predicts, regression_method = 'ols'):
+    ''' Under development
+    This method is functional, but messy at the moment.
+    It does the same thing as plot plot_MSE_comparison, but does not use the models at all.
+    This lets us skip making, and training new models for every plot we need'''
+
+    n_pol = len(z_predicts['test'])
+    poly_degs = np.arange(n_pol)
+    datasets = z_data.keys()
+    MSE_dict = make_container(datasets,n_pol)
+    n_boots = z_predicts["test"][0].shape[1]
+    for deg in poly_degs:
+        for name in datasets:
+            MSE_dict[name][deg] = np.mean([MSE(z_data[name], z_predicts[name][deg][:,i]) for i in range(n_boots)])
+
+    # Plots and saves plot of MSE comparisons
+    plot_2D(poly_degs, list(MSE_dict.values()), plot_count = 2, label = list(MSE_dict.keys()),
+        title=regression_method + " MSE comparison ",x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
+
 
 def plot_MSE_comparison(models, z_test, n_boots = 100, regression_method = 'ols', resample_method='boot'):
     ''' Makes models for every polynomial degree up to the input
