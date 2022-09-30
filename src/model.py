@@ -6,7 +6,7 @@ from calculate import MSE, R2
 class Algorithms:
 
     def __init__(self, regression_method, resampling_method):
-        self.REGERSSION_METHODS = ['ols','ridge']
+        self.REGRESSION_METHODS = ['ols','ridge']
         self.RESAMPLING_METHODS = ['none','boot','cross']
 
         self.regression_method = regression_method
@@ -17,7 +17,7 @@ class Algorithms:
 
     def check_health(self):
 
-        if self.regression_method not in self.REGERSSION_METHODS:
+        if self.regression_method not in self.REGRESSION_METHODS:
             raise Exception('Invalid regression_method')
 
         if self.resampling_method not in self.RESAMPLING_METHODS:
@@ -132,7 +132,7 @@ class Model:
         self.z_train = z_train
         self.X_dict = {train_name:self.design(x_train)}
 
-        # probably don't need 
+        # probably don't need
         self.reg_method = regression_method
         self.res_method = resampling_method
 
@@ -213,5 +213,3 @@ class Model:
     def end_boot(self):
         self.n_boots = None
         self.boot_betas = None
-
-    
