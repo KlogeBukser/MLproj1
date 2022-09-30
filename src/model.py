@@ -52,12 +52,13 @@ class Algorithms:
         """
         if self.resampling_method == 'boot':
             pass
-            # self.resample = self.bootstrap
+            self.start_resample = self.start_boot
+            self.resample_predict = self.boot_predict
+            self.end_resample = self.end_boot
 
         if self.resampling_method == 'cross':
             pass
             # self.resample = self.cross
-
 
 
     def find_beta_ols(self, X, y):
@@ -116,44 +117,6 @@ class Algorithms:
         if cmp_func(y, X @ beta_1) < cmp_func(y, X @ beta_2): # ?questionable comparison
             return True
         return False
-
-
-    def start_boot(self, n_boots, regression_method='ols', predict_boot = False):
-        self.n_boots = n_boots
-        self.boot_betas = np.empty((self.feature_count, n_boots))
-
-        if (predict_boot):
-            # This option returns the boot sample for z, and its prediction on X boot
-            # Only use this option if you want these values
-            z_boots = np.empty((len(self.z_train),self.n_boots))
-            z_boots_fit = np.copy(z_boots)
-            for i in range(n_boots):
-                X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
-
-                beta = self.algorithms.find_beta(X_, z_, regression_method)
-
-                self.boot_betas[:,i] = beta
-                z_boots[:,i] = z_
-                z_boots_fit[:,i] = np.dot(X_, beta)
-
-            return z_boots, z_boots_fit
-
-        else:
-            # Saves the beta values for each bootstrap sample
-            for i in range(n_boots):
-                X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
-                self.boot_betas[:,i] = self.algorithms.find_beta(X_, z_,regression_method)
-
-    def boot_predict(self,name):
-        X = self.X_dict[name]
-        z_pred = np.empty((X.shape[0],self.n_boots))
-        for i in range(self.n_boots):
-            z_pred[:,i] = np.dot(X,self.boot_betas[:,i])
-        return z_pred
-
-    def end_boot(self):
-        self.n_boots = None
-        self.boot_betas = None
 
 
 class Model:
