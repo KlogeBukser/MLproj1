@@ -18,7 +18,7 @@ regression_method = 'ols'
 
 # choose resampling methods
 
-resampling_method = 'boot'
+# resampling_method = 'boot'
 # resampling_method = 'cross'
 
 # Max polynomial degree
@@ -30,10 +30,14 @@ x, z = generate_data_Franke(20,noise = 0.5)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 
 # Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
-models = []
+boot_models = []
+none_models = []
 for deg in range(polydeg + 1):
-    models.append(Model(deg, x_train, z_train, resampling_method=resampling_method, regression_method = regression_method, n_res = n_boots))
-    models[deg].add_x(x_test,"test")
+    boot_models.append(Model(deg, x_train, z_train, resampling_method='boot', regression_method = regression_method, n_res = n_boots))
+    boot_models[deg].add_x(x_test,"test")
+
+    none_models.append(Model(deg, x_train, z_train, resampling_method='none', regression_method = regression_method, n_res = n_boots))
+    none_models[deg].add_x(x_test,"test")
 
 
 """This block of code is under development, but functional
@@ -49,8 +53,8 @@ plot_MSE_comparison2(data, predictions, regression_method = regression_method)
 """
 
 # choose desired plots
-plot_MSEs(models, z_test, regression_method=regression_method) # plots MSE as a function of polynomial degrees for both no resampling and bootstrap
+plot_MSEs(boot_models, z_test, regression_method=regression_method) # plots MSE as a function of polynomial degrees for both no resampling and bootstrap
 
 
 #this doesn't work for lasso since there's no analytical expression for beta_lasso
-plot_scores_beta(models,z_test,regression_method=regression_method) # plots beta, R2 scores and MSE as a function of features
+plot_scores_beta(none_models,z_test,regression_method=regression_method) # plots beta, R2 scores and MSE as a function of features
