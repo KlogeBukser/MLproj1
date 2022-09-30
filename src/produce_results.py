@@ -52,7 +52,7 @@ def plot_MSE_comparison(models, z_test, n_boots = 100, regression_method = 'ols'
 
     if resample_method == 'boot':
         for model in models:
-            z_boot,z_boot_fit = model.start_boot(n_boots, regression_method, predict_boot = True)
+            z_boot,z_boot_fit = model.start_boot(n_boots, predict_boot = True)
             z_pred = model.boot_predict("test")
             z_fit = model.boot_predict("train")
             model.end_boot()
@@ -64,7 +64,7 @@ def plot_MSE_comparison(models, z_test, n_boots = 100, regression_method = 'ols'
 
 
     # Plots and saves plot of MSE comparisons
-    plot_2D(poly_degs, list(MSE_dict.values()), plot_count = 3, label = list(MSE_dict.keys()), 
+    plot_2D(poly_degs, list(MSE_dict.values()), plot_count = 3, label = list(MSE_dict.keys()),
         title=regression_method + " MSE comparison ",x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
 

@@ -168,7 +168,8 @@ class Model:
         self.feature_count = len(self.functions)
         self.z_train = z_train
         self.X_dict = {train_name:self.design(x_train)}
-        self.beta = self.choose_beta(self.X_dict["train"], self.z_train, regression_method)
+        self.reg_method = regression_method
+        self.beta = self.choose_beta(self.X_dict["train"], self.z_train)
 
 
         # NEW, unstable
@@ -236,12 +237,12 @@ class Model:
     def add_x(self,x,name):
         self.X_dict[name] = self.design(x)
 
-    def choose_beta(self, X, z, regression_method='ols'):
+    def choose_beta(self, X, z):
         '''return the beta found using the specified regression method
         input: X: matrix, z: array like '''
-        if regression_method == 'ols':
+        if self.reg_method == 'ols':
             beta = self.find_beta_ols(X, z)
-        elif regression_method == 'ridge':
+        elif self.reg_method == 'ridge':
             beta = self.best_ridge_beta(X, z)
         else:
             raise Exception('Invalid regression_method, try something else you bastard!')
@@ -249,7 +250,7 @@ class Model:
         return beta
 
 
-    def start_boot(self, n_boots, regression_method='ols', predict_boot = False):
+    def start_boot(self, n_boots, predict_boot = False):
         self.n_boots = n_boots
         self.boot_betas = np.empty((self.feature_count, n_boots))
 
@@ -261,7 +262,7 @@ class Model:
             for i in range(n_boots):
                 X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
 
-                beta = self.choose_beta(X_, z_, regression_method)
+                beta = self.choose_beta(X_, z_)
 
                 self.boot_betas[:,i] = beta
                 z_boots[:,i] = z_
@@ -273,7 +274,7 @@ class Model:
             # Saves the beta values for each bootstrap sample
             for i in range(n_boots):
                 X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
-                self.boot_betas[:,i] = self.choose_beta(X_, z_,regression_method)
+                self.boot_betas[:,i] = self.choose_beta(X_, z_)
 
     def boot_predict(self,name):
         X = self.X_dict[name]
