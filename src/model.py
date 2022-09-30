@@ -52,10 +52,10 @@ class Algorithms:
 
         """
         if self.resampling_method == 'none':
-            self.resample = self.none_resample
+            self.one_resample = self.none_resample
 
         if self.resampling_method == 'boot':
-            self.resample = self.boot_resample
+            self.one_resample = self.one_boot
             """
             self.start_resample = self.start_boot
             self.resample_predict = self.boot_predict
@@ -123,22 +123,16 @@ class Algorithms:
             return True
         return False
 
-    def none_resample(self, X, z, n_res):
-        beta = self.find_beta(X,z)
-        return beta
-
-    def boot_resample(self, X, z, n_res):
-        #res_meth = self.resampling_method
+    def resample(self, X, z, n_res):
         betas = np.empty((X.shape[1], n_res))
-        z_res = np.empty((z.shape[0], n_res))
-        z_res_fit = np.copy(z_res)
-
         for i in range(n_res):
-            X_, z_ = self.one_boot(X,z)
+            X_, z_ = self.one_resample(X,z)
             betas[:,i] = self.find_beta(X_, z_).ravel()
 
         return betas
 
+    def none_resample(self, X, z, n_res = 1):
+        return X, z
 
     def one_boot(self, X, z):
         X_ = np.empty(X.shape)
