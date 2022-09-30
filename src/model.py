@@ -13,7 +13,6 @@ class Algorithms:
         self.resampling_method = resampling_method
 
         self.assign_algos()
-        self.assign_resample()
 
 
     def check_health(self):
@@ -29,7 +28,7 @@ class Algorithms:
         self.check_health()
 
         self.assign_reg()
-        # self.assign_resample()
+        self.assign_resample()
 
 
     def assign_reg(self):
@@ -54,7 +53,7 @@ class Algorithms:
         if self.resampling_method == 'none':
             self.one_resample = self.none_resample
 
-        if self.resampling_method == 'boot':
+        elif self.resampling_method == 'boot':
             self.one_resample = self.one_boot
             """
             self.start_resample = self.start_boot
@@ -64,8 +63,10 @@ class Algorithms:
 
         elif self.resampling_method == 'cross':
             pass
-            # self.resample = self.cross
-
+            """
+            self.folds = None
+            self.one_resample = self.one_cross
+            """
 
     def find_beta_ols(self, X, y):
         ''' Finds beta using OLS '''
@@ -113,7 +114,6 @@ class Algorithms:
                 best_beta = beta
                 self.best_lamb = lamb
 
-        # print(self.best_lamb)
         return best_beta
 
     def cmp_beta(self, X, y, beta_1, beta_2, cmp_func):
@@ -124,14 +124,15 @@ class Algorithms:
         return False
 
     def resample(self, X, z, n_res):
-        betas = np.empty((X.shape[1], n_res))
-        for i in range(n_res):
+        self.n_res = n_res
+        betas = np.empty((X.shape[1], self.n_res))
+        for i in range(self.n_res):
             X_, z_ = self.one_resample(X,z)
             betas[:,i] = self.find_beta(X_, z_).ravel()
 
         return betas
 
-    def none_resample(self, X, z, n_res = 1):
+    def none_resample(self, X, z):
         return X, z
 
     def one_boot(self, X, z):
@@ -143,6 +144,7 @@ class Algorithms:
             X_[s,:] = X[r_int,:]
             z_[s] = z[r_int]
         return X_, z_
+
 
 class Model:
     """Regression model"""
@@ -184,3 +186,40 @@ class Model:
 
     def add_x(self,x,name):
         self.X_dict[name] = self.design(x)
+
+
+    def cross_validate(self, k, n_lambs = 100, lamb_range = (-4,4), score_func = MSE):
+        z = self.z_train
+        X = self.X_dict["train"]
+
+        n_z = z.shape[0]
+        order = np.arange(n_z)
+
+        gen = np.random.default_rng()
+        gen.shuffle(order)
+
+        lambdas = np.logspace(lamb_range[0],lamb_range[1],n_lambs)
+        fold_len = int(n_z/k)
+        folds = [order[i*fold_len:(i+1)*fold_len] for i in range(k - 1)]
+        folds.append(order[(k-1)*fold_len:])
+
+        scores = np.empty((lambdas.shape[0],k))
+
+        for i in range(k):
+            test_indices = folds.pop(0)
+            train_indices = np.array(folds).ravel()
+
+            z_test = z[test_indices]
+            X_test = X[test_indices]
+
+            z_train = z[train_indices]
+            X_train = X[train_indices]
+
+            for j in range(n_lambs):
+                beta = self.algorithms.find_beta_ridge(X_train, z_train, lambdas[j])
+                z_pred = np.dot(X_test,beta)
+                scores[j,i] = score_func(z_test,z_pred)
+
+            # Adding the test fold to the back of the folds
+            folds.append(test_indices)
+        return scores

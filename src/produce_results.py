@@ -89,14 +89,21 @@ def plot_MSE_comparison(models, z_test, regression_method = 'ols', resampling_me
     poly_degs = np.arange(n_pol)
     z_train = models[-1].z_train
 
-    err_dict = make_container(['Test','Train'],n_pol)
+    err_dict = make_container(['Test','Train','k1','k2','k3','k4','k5'],n_pol)
 
 
     for model in models:
         z_pred = model.predict("test")
         z_fit = model.predict("train")
         deg = model.polydeg
+        err_dict['Test'][deg] = MSE(z_test, z_pred)
+        err_dict['Train'][deg] = MSE(z_train, z_fit)
+        kfold_scores = np.mean(model.cross_validate(5,n_lambs = 5), keepdims = True, axis = 1)
+        print(kfold_scores)
+        for i in range(5):
+            err_dict['k%d' % (i+1)][deg] = kfold_scores[i]
 
+        """
         if (resampling_method == 'none'):
             err_dict['Test'][deg] = MSE(z_test, z_pred)
             err_dict['Train'][deg] = MSE(z_train, z_fit)
@@ -108,12 +115,12 @@ def plot_MSE_comparison(models, z_test, regression_method = 'ols', resampling_me
             err_dict['Train'][deg] = MSE(z_train, z_fit)
             #err_dict['biases'][deg] = biases[i] = cal_bias(z_test, z_pred[:,i]) for i in range(model.n_res))
             #err_dict['variances'][deg] = cal_variance(z_test, z_pred[:,i]) for i in range(model.n_res))
-
+        """
 
 
 
     # Plots and saves plot of MSE comparisons
-    plot_2D(poly_degs, list(err_dict.values()), plot_count = 2, label = list(err_dict.keys()),
+    plot_2D(poly_degs, list(err_dict.values()), plot_count = 7, label = list(err_dict.keys()),
         title=regression_method + " MSE comparison ",x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
     # Plot bias variance trade off for bootstrap samples (poly degs)
