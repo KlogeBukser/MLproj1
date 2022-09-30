@@ -36,7 +36,7 @@ for deg in range(polydeg + 1):
     boot_models.append(Model(deg, x_train, z_train, resampling_method='boot', regression_method = regression_method, n_res = n_boots))
     boot_models[deg].add_x(x_test,"test")
 
-    none_models.append(Model(deg, x_train, z_train, resampling_method='none', regression_method = regression_method, n_res = n_boots))
+    none_models.append(Model(deg, x_train, z_train, resampling_method='none', regression_method = regression_method))
     none_models[deg].add_x(x_test,"test")
 
 
