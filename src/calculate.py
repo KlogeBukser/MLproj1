@@ -23,7 +23,8 @@ def MSE(z_test, z_pred):
     :returns: Mean squared error
 
     """
-    return np.mean( np.mean((z_test - z_pred)**2, keepdims=True) )
+
+    return np.mean((z_test - z_pred)**2)
 
 
 def cal_bias(z_test, z_pred):

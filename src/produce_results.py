@@ -95,18 +95,17 @@ def plot_MSE_comparison(models, z_test, regression_method = 'ols', resampling_me
     for model in models:
         z_pred = model.predict("test")
         z_fit = model.predict("train")
-
         deg = model.polydeg
 
         if (resampling_method == 'none'):
-            err_dict['Test'][deg] = np.mean(MSE(z_test, z_pred))
-            err_dict['Train'][deg] = np.mean(MSE(z_train, z_fit))
+            err_dict['Test'][deg] = MSE(z_test, z_pred)
+            err_dict['Train'][deg] = MSE(z_train, z_fit)
             #err_dict['biases'][deg] = biases[i] = cal_bias(z_test, z_pred)
             #err_dict['variances'][deg] = cal_variance(z_test, z_pred)
 
         if (resampling_method == 'boot'):
-            err_dict['Test'][deg] = np.mean([MSE(z_test, z_pred[:,i]) for i in range(model.n_res)])
-            err_dict['Train'][deg] = np.mean([MSE(z_train, z_fit[:,i]) for i in range(model.n_res)])
+            err_dict['Test'][deg] = MSE(z_test, z_pred)
+            err_dict['Train'][deg] = MSE(z_train, z_fit)
             #err_dict['biases'][deg] = biases[i] = cal_bias(z_test, z_pred[:,i]) for i in range(model.n_res))
             #err_dict['variances'][deg] = cal_variance(z_test, z_pred[:,i]) for i in range(model.n_res))
 
@@ -162,7 +161,7 @@ def plot_bias_var(z_test, z_pred, poly_degs):
 
 
 
-def plot_MSEs(models, z_test, n_boots=100, nlambdas=100, regression_method='ols', resample_method='boot'):
+def plot_MSEs(models, z_test, nlambdas=100, regression_method='ols', resample_method='boot'):
 
     print("Regression method : ", regression_method)
     assert regression_method in ALLOWED_METHODS, ERR_INVALID_METHOD

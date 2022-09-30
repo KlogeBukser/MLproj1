@@ -22,5 +22,6 @@ def generate_data_Franke(n = 20, noise = 1):
         x[i::n,1] = vals
 
     z = FrankeFunction(x[:,0],x[:,1]) + noise*np.random.randn(x.shape[0])
+    z = z[:,np.newaxis]
 
     return x, z

@@ -76,7 +76,7 @@ class Algorithms:
 
         '''return the beta for the given lambda '''
 
-        sqr = np.dot(X.T,X)
+        sqr = X.T @ X
         dim = sqr.shape[0]
         mat = sqr-lamb*np.identity(dim)
 
@@ -88,7 +88,6 @@ class Algorithms:
             inv = np.linalg.pinv(mat)
 
         beta = inv @ X.T @ y
-
 
         return beta
 
@@ -131,12 +130,12 @@ class Algorithms:
     def boot_resample(self, X, z, n_res):
         #res_meth = self.resampling_method
         betas = np.empty((X.shape[1], n_res))
-        z_res = np.empty((len(z), n_res))
+        z_res = np.empty((z.shape[0], n_res))
         z_res_fit = np.copy(z_res)
 
         for i in range(n_res):
             X_, z_ = self.one_boot(X,z)
-            betas[:,i] = self.find_beta(X_, z_)
+            betas[:,i] = self.find_beta(X_, z_).ravel()
 
         return betas
 
@@ -144,7 +143,7 @@ class Algorithms:
     def one_boot(self, X, z):
         X_ = np.empty(X.shape)
         z_ = np.empty(z.shape)
-        n_z = len(z_)
+        n_z = z_.shape[0]
         for s in range(n_z):
             r_int = np.random.randint(n_z)
             X_[s,:] = X[r_int,:]
@@ -164,10 +163,6 @@ class Model:
         self.z_train = z_train
         self.X_dict = {train_name:self.design(x_train)}
 
-        # probably don't need
-        self.reg_method = regression_method
-        self.res_method = resampling_method
-
         # NEW, unstable
         self.algorithms = Algorithms(regression_method, resampling_method)
         self.n_res = n_res
@@ -179,7 +174,6 @@ class Model:
 
         n = x.shape[0]
         design = np.ones((n, self.feature_count))
-
         for i in range(n):
             for j in range(self.feature_count):
                 design[i,j] = self.functions[j](x[i])
@@ -189,14 +183,10 @@ class Model:
     def predict(self,name):
         # Makes a prediction for z for the given design matrix
         X = self.X_dict[name]
-        if self.res_method == 'none':
-            return np.dot(X,self.betas)
-
         z_pred = np.empty((X.shape[0],self.n_res))
         for i in range(self.n_res):
             z_pred[:,i] = np.dot(X,self.betas[:,i])
         return z_pred
-
 
     def add_x(self,x,name):
         self.X_dict[name] = self.design(x)

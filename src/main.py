@@ -29,6 +29,7 @@ n_boots = 5
 x, z = generate_data_Franke(20,noise = 0.5)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 
+
 # Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
 boot_models = []
 none_models = []
