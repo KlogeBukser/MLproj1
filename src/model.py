@@ -7,7 +7,7 @@ class Algorithms:
 
     def __init__(self, regression_method, resampling_method):
         self.REGERSSION_METHODS = ['ols','ridge']
-        self.RESAMPLING_METHODS = ['boot','cross']
+        self.RESAMPLING_METHODS = ['none','boot','cross']
 
         self.regression_method = regression_method
         self.resampling_method = resampling_method
@@ -129,7 +129,7 @@ class Algorithms:
             for i in range(n_boots):
                 X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
 
-                beta = self.choose_beta(X_, z_, regression_method)
+                beta = self.find_beta(X_, z_, regression_method)
 
                 self.boot_betas[:,i] = beta
                 z_boots[:,i] = z_
@@ -141,7 +141,7 @@ class Algorithms:
             # Saves the beta values for each bootstrap sample
             for i in range(n_boots):
                 X_, z_ = bootstrap(self.X_dict["train"],self.z_train)
-                self.boot_betas[:,i] = self.choose_beta(X_, z_,regression_method)
+                self.boot_betas[:,i] = self.find_beta(X_, z_,regression_method)
 
     def boot_predict(self,name):
         X = self.X_dict[name]
@@ -158,7 +158,7 @@ class Algorithms:
 class Model:
     """Regression model"""
 
-    def __init__(self,polydeg,x_train,z_train, train_name = "train", regression_method='ols', resampling_method='boot'):
+    def __init__(self,polydeg,x_train,z_train, train_name = "train", regression_method='ols', resampling_method='none'):
         # Collects the feature functions for a "2 variable polynomial of given degree"
         # Saves integers describing polynomial degree and number of features
         # Takes training data, saves z_train the design matrix X_train
@@ -168,7 +168,9 @@ class Model:
         self.z_train = z_train
         self.X_dict = {train_name:self.design(x_train)}
         self.reg_method = regression_method
-        self.beta = self.choose_beta(self.X_dict["train"], self.z_train)
+        self.res_method = resampling_method
+        self.choose_beta()
+        self.beta = self.find_beta(self.X_dict["train"],self.z_train)
 
 
         # NEW, unstable
@@ -236,17 +238,16 @@ class Model:
     def add_x(self,x,name):
         self.X_dict[name] = self.design(x)
 
-    def choose_beta(self, X, z):
+    def choose_beta(self):
         '''return the beta found using the specified regression method
         input: X: matrix, z: array like '''
         if self.reg_method == 'ols':
-            beta = self.find_beta_ols(X, z)
+            self.find_beta = self.find_beta_ols
         elif self.reg_method == 'ridge':
-            beta = self.best_ridge_beta(X, z)
+            self.find_beta = self.best_ridge_beta
         else:
             raise Exception('Invalid regression_method, try something else you bastard!')
 
-        return beta
 
     def boot_resample(self):
         X_train = self.X_dict["train"]
@@ -274,7 +275,7 @@ class Model:
 
                 X_, z_ = self.boot_resample()
 
-                beta = self.choose_beta(X_, z_)
+                beta = self.find_beta(X_, z_)
 
                 self.boot_betas[:,i] = beta
                 z_boots[:,i] = z_
@@ -286,7 +287,7 @@ class Model:
             # Saves the beta values for each bootstrap sample
             for i in range(n_boots):
                 X_, z_ = self.boot_resample()
-                self.boot_betas[:,i] = self.choose_beta(X_, z_)
+                self.boot_betas[:,i] = self.find_beta(X_, z_)
 
     def boot_predict(self,name):
         X = self.X_dict[name]
