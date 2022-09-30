@@ -84,6 +84,10 @@ def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=False,
 
     make_dir(file_dir)
 
+    if plot_count == 1:
+        x = [x]
+        y = [y]
+
     for i in range(plot_count):
         if multi_x:
             if label:

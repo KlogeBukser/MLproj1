@@ -138,10 +138,10 @@ def plot_scores_beta(models, z_test, regression_method='ols'):
     plot_2D(beta_ranges, betas, plot_count = len(betas), title=regression_method + " beta ",x_title="features",y_title="Beta",filename= regression_method + ' beta.pdf')
 
     # Plots R2 score over polynomial degrees
-    plot_2D([poly_degs], [score_dict['R2']], title=regression_method + " R$^2$ Score ",x_title="polynomial degree",y_title="R2",filename= regression_method + ' R2.pdf')
+    plot_2D(poly_degs, score_dict['R2'], title=regression_method + " R$^2$ Score ",x_title="polynomial degree",y_title="R2",filename= regression_method + ' R2.pdf')
 
     # Plots MSE score over polynomial degrees
-    plot_2D([poly_degs],[score_dict['MSE']],title=regression_method + " Mean Squared Error", x_title="polynomial degree", y_title="MSE", filename=regression_method + ' MSE.pdf')
+    plot_2D(poly_degs,score_dict['MSE'],title=regression_method + " Mean Squared Error", x_title="polynomial degree", y_title="MSE", filename=regression_method + ' MSE.pdf')
 
 def plot_bias_var(is_resemble=False, resample_method=None):
 
