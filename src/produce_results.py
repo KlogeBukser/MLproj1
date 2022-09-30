@@ -90,7 +90,8 @@ def plot_MSE_comparison(models, z_test, n_boots = 100, regression_method = 'ols'
     poly_degs = np.arange(n_pol)
     z_train = models[-1].z_train
 
-    MSE_dict = make_container(['Test','Train',resample_method],n_pol)
+    err_dict = make_container(['Test','Train',resample_method, 'biases', 'variances'],n_pol)
+
 
     if resample_method == 'boot':
         for model in models:
@@ -100,16 +101,26 @@ def plot_MSE_comparison(models, z_test, n_boots = 100, regression_method = 'ols'
             model.end_boot()
 
             deg = model.polydeg
-            MSE_dict['Test'][deg] = np.mean([MSE(z_test, z_pred[:,i]) for i in range(n_boots)])
-            MSE_dict['Train'][deg] = np.mean([MSE(z_train, z_fit[:,i]) for i in range(n_boots)])
-            MSE_dict[resample_method][deg] = np.mean([MSE(z_boot[:,i],z_boot_fit[:,i]) for i in range(n_boots)])
+
+            err_dict['Test'][deg] = np.mean([MSE(z_test, z_pred[:,i]) for i in range(n_boots)])
+            err_dict['Train'][deg] = np.mean([MSE(z_train, z_fit[:,i]) for i in range(n_boots)])
+            err_dict[resample_method][deg] = np.mean([MSE(z_boot[:,i],z_boot_fit[:,i]) for i in range(n_boots)])
+
+            err_dict['biases'][deg] = biases[i] = cal_bias(z_test, z_pred[:,i] for i in range(n_boots))
+            err_dict['variances'][deg] = cal_variance(z_test, z_pred[:,i] for i in range(n_boots))
+
+
 
 
     # Plots and saves plot of MSE comparisons
-    plot_2D(poly_degs, list(MSE_dict.values()), plot_count = 3, label = list(MSE_dict.keys()),
+    plot_2D(poly_degs, list(err_dict.values()), plot_count = 3, label = list(err_dict.keys()),
         title=regression_method + " MSE comparison ",x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
+    # Plot bias variance trade off for bootstrap samples (poly degs)
+    plot_2D(poly_degs, [biases,variances], plot_count=2, label=['biases','variances'], 
+        x_title='polynomial degrees', y_title='errors', title = 'bias variances trade-off vs polynomial degrees' multi_x=False)
 
+    # missing: Plot bias variance trade off for bootstrap samples (number of samples, fixed poly degs)
 
 def plot_scores_beta(models, z_test, regression_method='ols'):
 
@@ -143,9 +154,12 @@ def plot_scores_beta(models, z_test, regression_method='ols'):
     # Plots MSE score over polynomial degrees
     plot_2D(poly_degs,score_dict['MSE'],title=regression_method + " Mean Squared Error", x_title="polynomial degree", y_title="MSE", filename=regression_method + ' MSE.pdf')
 
-def plot_bias_var(is_resemble=False, resample_method=None):
+def plot_bias_var(z_test, z_pred, poly_degs):
 
     pass
+        
+
+
 
 def plot_MSEs(models, z_test, n_boots=100, nlambdas=100, regression_method='ols', resample_method='boot'):
 
