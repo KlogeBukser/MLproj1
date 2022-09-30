@@ -75,7 +75,7 @@ def make_dir(file_dir):
             os.mkdir(file_dir)
 
 def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=False,filename=None,
-        file_dir='plots',color=COLORS):
+        file_dir='plots',color=COLORS, multi_x=True):
 
     '''plots inputs: x:array like of array like, y:array like of array likes,
     plot_count:int(number of plots),title:string, file_dir:string,colour:string'''
@@ -85,10 +85,17 @@ def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=False,
     make_dir(file_dir)
 
     for i in range(plot_count):
-        if label:
-            plt.plot(x[i],y[i],label=label[i],color=color[i])
+        if multi_x:
+            if label:
+                plt.plot(x[i],y[i],label=label[i],color=color[i])
+            else:
+                plt.plot(x[i],y[i],color=color[i])
         else:
-            plt.plot(x[i],y[i],color=color[i])
+            if label:
+                plt.plot(x,y[i],label=label[i],color=color[i])
+            else:
+                plt.plot(x,y[i],color=color[i])
+
 
 
     set_paras(x_title, y_title, title, filename, file_dir, label)

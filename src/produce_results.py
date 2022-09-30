@@ -64,7 +64,8 @@ def plot_MSE_comparison(models, z_test, n_boots = 100, regression_method = 'ols'
 
 
     # Plots and saves plot of MSE comparisons
-    plot_2D([poly_degs,poly_degs,poly_degs], list(MSE_dict.values()), plot_count = 3, label = list(MSE_dict.keys()), title=regression_method + " MSE comparison ",x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf')
+    plot_2D(poly_degs, list(MSE_dict.values()), plot_count = 3, label = list(MSE_dict.keys()), 
+        title=regression_method + " MSE comparison ",x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
 
 
