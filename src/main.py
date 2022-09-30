@@ -28,12 +28,12 @@ polydeg = 5
 x, z = generate_data_Franke(20,noise = 0.5)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 
-# Makes models, and feeds them the testing data (x_test) for predictions
+# Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
 models = []
 for deg in range(polydeg + 1):
     models.append(Model(deg, x_train, z_train, regression_method = regression_method))
     models[deg].add_x(x_test,"test")
-
+    
 # choose desired plots
 plot_MSEs(models, z_test, regression_method=regression_method) # plots MSE as a function of polynomial degrees for both no resampling and bootstrap
 
