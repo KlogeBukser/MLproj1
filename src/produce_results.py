@@ -79,8 +79,8 @@ def plot_boot(n,z_train,z_test,z_pred,z_fit,regression_method, skip_zero = False
         title=regression_method + " MSE comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
 
-    plot_2D(poly_degs, [MSE_dict['test'],MSE_dict['bias'],MSE_dict['variance']], plot_count = 3, label = ['test','bias','variance'],
-        title=regression_method + " Bias-Variance " + str(n**2) + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' BiVa.pdf', multi_x=False)
+    plot_2D(poly_degs, [MSE_dict['test'],MSE_dict['bias'],MSE_dict['variance']], plot_count = 3, label = ['MSE','bias','variance'],
+        title=regression_method + " Bias-Variance " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= regression_method + ' BiVa_boot.pdf', multi_x=False)
 
 
 def make_predictions(models, x_test):
@@ -114,8 +114,6 @@ def plot_MSE_R2(n,z_test, z_pred, regression_method):
     poly_degs = np.arange(n_pol)
     MSEs = np.empty(n_pol)
     R2s = np.empty(n_pol)
-    bias = np.empty(n_pol)
-    variance = np.empty(n_pol)
     for i in poly_degs:
         MSEs[i] = MSE(z_test,z_pred[i])
         R2s[i] = R2(z_test,z_pred[i])

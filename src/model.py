@@ -104,7 +104,7 @@ class Model:
         self.polydeg = polydeg
         self.functions = get_2D_pols(self.polydeg)
         self.feature_count = len(self.functions)
-        self.scaler = None
+        self.is_scaled = False
         self.algorithms = Algorithms(regression_method)
 
     def bootstrap(self, x_test, n_boots):
@@ -157,11 +157,12 @@ class Model:
             for j in range(self.feature_count):
                 design[i,j] = self.functions[j](x[i])
 
-        if self.scaler is None:
-            self.scaler = np.array([np.mean(design[:,i]) for i in range(self.feature_count)])
-            self.scaler[0] = 0
+        if  not self.is_scaled:
+            self.design_mean = np.array([0] + [np.mean(design[:,i]) for i in range(1,self.feature_count)])
+            self.design_std = np.array([1] + [1/np.std(design[:,i]) for i in range(1,self.feature_count)])
+            is_scaled = True
 
-        return design - self.scaler
+        return design*self.design_std - self.design_mean
 
     def predict_mat(self,X):
         return X @ self.beta
@@ -181,12 +182,18 @@ class Model:
         gen = np.random.default_rng()
         gen.shuffle(order)
 
-        lambdas = np.logspace(lamb_range[0],lamb_range[1],n_lambs)
+        reg_meth = self.algorithms.regression_method
+
+        if reg_meth == 'ridge':
+            lambdas = np.logspace(lamb_range[0],lamb_range[1],n_lambs)
+        else:
+            lambdas = np.zeros((1,1))
+
         fold_len = int(n_z/k)
         folds = [order[i*fold_len:(i+1)*fold_len] for i in range(k - 1)]
         folds.append(order[(k-1)*fold_len:])
 
-        scores = np.empty((lambdas.shape[0],k))
+        scores = np.empty((k,lambdas.shape[0]))
 
         for i in range(k):
             test_indices = folds.pop(0)
@@ -198,11 +205,16 @@ class Model:
             z_train = z[train_indices]
             X_train = X[train_indices]
 
+            # Adding the test fold to the back of the folds
+            folds.append(test_indices)
+
+            if algorithms == 'ols':
+                continue
+
             for j in range(n_lambs):
                 beta = self.algorithms.find_beta_ridge(X_train, z_train, lambdas[j])
                 z_pred = X_test @ beta
-                scores[j,i] = score_func(z_test,z_pred)
+                scores[i,j] = score_func(z_test,z_pred)
 
-            # Adding the test fold to the back of the folds
-            folds.append(test_indices)
-        return scores
+
+        return np.mean(scores,keepdims = True)
