@@ -5,12 +5,11 @@ from calculate import MSE, R2
 
 class Algorithms:
 
-    def __init__(self, regression_method, ):
+    def __init__(self, regression_method):
         self.REGRESSION_METHODS = ['ols','ridge']
-        self.RESAMPLING_METHODS = ['none','boot','cross']
 
         self.regression_method = regression_method
-        
+
 
         self.assign_algos()
 
@@ -20,7 +19,7 @@ class Algorithms:
         if self.regression_method not in self.REGRESSION_METHODS:
             raise Exception('Invalid regression_method')
 
-        
+
     def assign_algos(self):
 
         self.check_health()
@@ -94,14 +93,41 @@ class Algorithms:
             return True
         return False
 
-    def resample(self, X, z, n_res):
-        self.n_res = n_res
-        betas = np.empty((X.shape[1], self.n_res))
-        for i in range(self.n_res):
-            X_, z_ = self.one_resample(X,z)
-            betas[:,i] = self.find_beta(X_, z_).ravel()
 
-        return betas
+class Model:
+    """Regression model"""
+
+    def __init__(self, polydeg, regression_method='ols'):
+        # Collects the feature functions for a "2 variable polynomial of given degree"
+        # Saves integers describing polynomial degree and number of features
+        # Takes training data, saves z_train the design matrix X_train
+        self.polydeg = polydeg
+        self.functions = get_2D_pols(self.polydeg)
+        self.feature_count = len(self.functions)
+
+        # NEW, unstable
+        self.algorithms = Algorithms(regression_method)
+
+    def bootstrap(self, x_test, n_boots):
+        """ Predicts on test, and training set
+
+        :z_test: array_like
+        :n_boots: int
+        :returns: 2D array_like, 2D array_like
+
+        """
+        X_train = self.X_train
+        X_test = self.design(x_test)
+        z_pred = np.empty((X_test.shape[0],n_boots))
+        z_fit = np.empty((X_train.shape[0],n_boots))
+
+        for i in range(n_boots):
+            X_, z_ = self.one_boot(X_train,self.z_train)
+            beta = self.algorithms.find_beta(X_, z_).ravel()
+            z_pred[:,i] = np.dot(X_test, beta)
+            z_fit[:,i] = np.dot(X_train, beta)
+
+        return z_pred, z_fit
 
     def one_boot(self, X, z):
         X_ = np.empty(X.shape)
@@ -113,29 +139,19 @@ class Algorithms:
             z_[s] = z[r_int]
         return X_, z_
 
+    def fit(self, x, z):
+        """ Fits the model on training data x, and z
 
-class Model:
-    """Regression model"""
+        :x: array_like of tuples
+        :z: array_like
 
-    def __init__(self,polydeg,x_train,z_train, train_name = "train", regression_method='ols', n_res = 1):
-        # Collects the feature functions for a "2 variable polynomial of given degree"
-        # Saves integers describing polynomial degree and number of features
-        # Takes training data, saves z_train the design matrix X_train
-        self.polydeg = polydeg
-        self.functions = get_2D_pols(self.polydeg)
-        self.feature_count = len(self.functions)
-        self.z_train = z_train
-        self.X_dict = {train_name:self.design(x_train)}
-
-        # NEW, unstable
-        self.algorithms = Algorithms(regression_method)
-        self.n_res = n_res
-        self.betas = self.algorithms.resample(self.X_dict["train"],self.z_train,n_res)
-
+        """
+        self.z_train = z
+        self.X_train = self.design(x)
+        self.beta = self.algorithms.find_beta(self.X_train,self.z_train)
 
     def design(self,x):
         # Uses the features to turn set of tuple values (x,y) into design matrix
-
         n = x.shape[0]
         design = np.ones((n, self.feature_count))
         for i in range(n):
@@ -144,21 +160,17 @@ class Model:
 
         return design
 
-    def predict(self,name):
-        # Makes a prediction for z for the given design matrix
-        X = self.X_dict[name]
-        z_pred = np.empty((X.shape[0],self.n_res))
-        for i in range(self.n_res):
-            z_pred[:,i] = np.dot(X,self.betas[:,i])
-        return z_pred
+    def predict_mat(self,X):
+        return X @ self.beta
 
-    def add_x(self,x,name):
-        self.X_dict[name] = self.design(x)
+    def predict(self,x):
+        # Makes a prediction for z for the given design matrix
+        return self.predict_mat(self.design(x))
 
 
     def cross_validate(self, k, n_lambs = 100, lamb_range = (-4,4), score_func = MSE):
         z = self.z_train
-        X = self.X_dict["train"]
+        X = self.X_train
 
         n_z = z.shape[0]
         order = np.arange(n_z)

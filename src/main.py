@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from generate import generate_data_Franke
 from produce_results import *
 
-np.random.seed(1) # To have better control of what the plots are supposed to look like
+np.random.seed(1)
 
 
 # choose regression methods
@@ -23,42 +23,34 @@ regression_method = 'ols'
 
 # Max polynomial degree
 polydeg = 5
-n_boots = 5
+n_boots = 100
 
 # Generates data, and splits it
 for n in (20,30,40):
-    x, z = generate_data_Franke(20,noise = 0.5)
+    x, z = generate_data_Franke(n,noise = 0.5)
     x_train, x_test, z_train, z_test = train_test_split(x,z)
 
 
     # Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
-    boot_models = []
-    none_models = []
+    models = []
     for deg in range(polydeg + 1):
-        boot_models.append(Model(deg, x_train, z_train, regression_method = regression_method, n_res = n_boots))
-        boot_models[deg].add_x(x_test,"test")
-
-        none_models.append(Model(deg, x_train, z_train, regression_method = regression_method))
-        none_models[deg].add_x(x_test,"test")
-
-    plot_MSEs(boot_models, z_test, regression_method=regression_method, n=n) # plots MSE as a function of polynomial degrees for both no resampling and bootstrap
+        models.append(Model(deg, regression_method = regression_method))
+        models[deg].fit(x_train,z_train)
 
 
-"""This block of code is under development, but functional
-It finds the z predictions first, and use those to find MSE (and eventually other stuff)
-Atm it does the same as just calling plot_MSEs"""
+    # Finds prediction values without resampling
+    z_pred, betas = make_predictions(models, x_test)
 
-# prediction_names = ["train","test"]
-# predictions = make_predictions_boot(models,prediction_names,n_boots = n_boots)
-# data = make_container(prediction_names)
-# data["train"] = z_train
-# data["test"] = z_test
-# plot_MSE_comparison2(data, predictions, regression_method = regression_method)
+    # Plots desired values for the model without resampling
+    plot_MSE_R2(z_test, z_pred)
+    plot_beta(betas)
 
+    # Finds prediction values with the bootstrap method
+    z_pred_b, z_fit_b = make_predictions_boot(models,x_test,n_boots)
 
-# choose desired plots
-    
+    # Plots desired values for the (bootstrap) resampled predictions
+    plot_boot(z_train, z_test, z_pred_b, z_fit_b)
 
 
-    #this doesn't work for lasso since there's no analytical expression for beta_lasso
-# plot_scores_beta(none_models,z_test,regression_method=regression_method) # plots beta, R2 scores and MSE as a function of features
+    break
+    #plot_MSEs(boot_models, z_test, regression_method=regression_method, n=n) # plots MSE as a function of polynomial degrees for both no resampling and bootstrap
