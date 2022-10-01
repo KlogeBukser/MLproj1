@@ -22,12 +22,12 @@ regression_method = 'ols'
 # resampling_method = 'cross'
 
 # Max polynomial degree
-polydeg = 8
+polydeg = 5
 n_boots = 100
 
 # Generates data, and splits it
 for n in (20,30,40):
-    x, z = generate_data_Franke(n,noise = 0.5)
+    x, z = generate_data_Franke(n,noise = 0.3)
     x_train, x_test, z_train, z_test = train_test_split(x,z)
 
 
@@ -39,18 +39,20 @@ for n in (20,30,40):
 
 
     # Finds prediction values without resampling
-    z_pred, betas = make_predictions(models[:5], x_test)
+    #z_pred, betas = make_predictions(models[:5], x_test)
 
     # Plots desired values for the model without resampling
-    plot_MSE_R2(n,z_test, z_pred, regression_method = regression_method)
-    plot_beta(n,betas, regression_method = regression_method)
+    #plot_MSE_R2(n,z_test, z_pred, regression_method = regression_method)
+    #plot_beta(n,betas, regression_method = regression_method)
 
 
     # Finds prediction values with the bootstrap method
     z_pred_b, z_fit_b = make_predictions_boot(models,x_test,n_boots)
 
     # Plots desired values for the (bootstrap) resampled predictions
-    plot_boot(n,z_train, z_test, z_pred_b, z_fit_b, regression_method = regression_method, skip_zero = False)
+    MSE_boot = find_MSE_boot(z_train, z_test, z_pred_b, z_fit_b)
+    MSE_Kfold = find_MSE_Kfold(models,range(5,11))
 
+    plot_MSE_resampling(n,MSE_boot,MSE_Kfold,regression_method)
 
     break

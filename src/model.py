@@ -158,11 +158,15 @@ class Model:
                 design[i,j] = self.functions[j](x[i])
 
         if  not self.is_scaled:
-            self.design_mean = np.array([0] + [np.mean(design[:,i]) for i in range(1,self.feature_count)])
-            self.design_std = np.array([1] + [1/np.std(design[:,i]) for i in range(1,self.feature_count)])
+            self.design_mean, self.design_std = self.calc_scale(design)
             is_scaled = True
 
-        return design*self.design_std - self.design_mean
+        return design*(self.design_std - self.design_mean)
+
+    def calc_scale(self,X):
+        mean = np.array([0] + [np.mean(X[:,i]) for i in range(1,self.feature_count)])
+        std = np.array([1] + [1/np.std(X[:,i]) for i in range(1,self.feature_count)])
+        return mean, std
 
     def predict_mat(self,X):
         return X @ self.beta
@@ -186,18 +190,19 @@ class Model:
 
         if reg_meth == 'ridge':
             lambdas = np.logspace(lamb_range[0],lamb_range[1],n_lambs)
+            scores = np.empty((k,lambdas.shape[0]))
         else:
-            lambdas = np.zeros((1,1))
+            scores = np.empty(k)
 
         fold_len = int(n_z/k)
         folds = [order[i*fold_len:(i+1)*fold_len] for i in range(k - 1)]
         folds.append(order[(k-1)*fold_len:])
 
-        scores = np.empty((k,lambdas.shape[0]))
 
         for i in range(k):
             test_indices = folds.pop(0)
-            train_indices = np.array(folds).ravel()
+            train_indices = [elem for fold in folds for elem in fold]
+
 
             z_test = z[test_indices]
             X_test = X[test_indices]
@@ -205,10 +210,17 @@ class Model:
             z_train = z[train_indices]
             X_train = X[train_indices]
 
+            K_mean, K_std = self.calc_scale(X_test)
+            X_train = K_std*(X_train - K_mean)
+            X_test = K_std*(X_test - K_mean)
+
             # Adding the test fold to the back of the folds
             folds.append(test_indices)
 
-            if algorithms == 'ols':
+            if reg_meth == 'ols':
+                beta = self.algorithms.find_beta(X_train, z_train)
+                z_pred = X_test @ beta
+                scores[i] = score_func(z_test,z_pred)
                 continue
 
             for j in range(n_lambs):
@@ -217,4 +229,4 @@ class Model:
                 scores[i,j] = score_func(z_test,z_pred)
 
 
-        return np.mean(scores,keepdims = True)
+        return np.mean(scores)

@@ -30,6 +30,24 @@ def make_container(container_names,n_pol = None):
 
     return container_dict
 
+def find_MSE_Kfold(models, k_vals):
+
+    n_pol = models[-1].polydeg + 1
+    if models[0].algorithms.regression_method == 'ridge':
+        print("stop, this isn't ready yet")
+        return
+
+    MSEs = np.empty((len(k_vals), n_pol))
+    for i, model in enumerate(models):
+        for j, k in enumerate(k_vals):
+            MSEs[j,i] = model.cross_validate(k)
+
+
+
+    return MSEs
+
+
+
 def make_predictions_boot(models, x_test, n_boots = 100):
     """ Makes predictions on models with bootstrap resampling
 
@@ -51,7 +69,7 @@ def make_predictions_boot(models, x_test, n_boots = 100):
     return z_pred, z_fit
 
 
-def plot_boot(n,z_train,z_test,z_pred,z_fit,regression_method, skip_zero = False):
+def find_MSE_boot(z_train,z_test,z_pred,z_fit, include_bias_var = True):
     """ Plots MSE score for models against their polynomial degree on test set and training set.
     For bootstrap predictions
 
@@ -60,9 +78,6 @@ def plot_boot(n,z_train,z_test,z_pred,z_fit,regression_method, skip_zero = False
     :z_pred: 2D array_like
 
     """
-    if (skip_zero):
-        z_pred = z_pred[1:]
-        z_fit = z_fit[1:]
 
     n_pol = z_pred.shape[0]
     MSE_dict = make_container(['test','train','bias','variance'],n_pol)
@@ -73,14 +88,28 @@ def plot_boot(n,z_train,z_test,z_pred,z_fit,regression_method, skip_zero = False
         MSE_dict['bias'][i] = cal_bias(z_test,z_pred[i])
         MSE_dict['variance'][i] = cal_variance(z_pred[i])
 
-    if skip_zero:
-        poly_degs += 1
-    plot_2D(poly_degs, [MSE_dict['test'],MSE_dict['train']], plot_count = 2, label = ['test','train'],
+    return MSE_dict
+
+def find_MSE(z_train,z_test,z_pred,z_fit):
+    n_pol = z_pred.shape[0]
+    MSE_dict = make_container(['test','train'],n_pol)
+    poly_degs = np.arange(n_pol)
+
+
+
+def plot_MSE_resampling(n, MSE_boot, MSE_Kfold, regression_method):
+    n_pol = MSE_Kfold.shape[1]
+    poly_degs = np.arange(n_pol)
+    K_comp = [MSE_boot['test'],MSE_boot['train']] + [MSE_Kfold[i] for i in range(MSE_Kfold.shape[0])]
+
+    plot_2D(poly_degs, [MSE_boot['test'],MSE_boot['train']], plot_count = 2, label = ['test','train'],
         title=regression_method + " MSE comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
-
-    plot_2D(poly_degs, [MSE_dict['test'],MSE_dict['bias'],MSE_dict['variance']], plot_count = 3, label = ['MSE','bias','variance'],
+    plot_2D(poly_degs, [MSE_boot['test'],MSE_boot['bias'],MSE_boot['variance']], plot_count = 3, label = ['MSE','bias','variance'],
         title=regression_method + " Bias-Variance " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= regression_method + ' BiVa_boot.pdf', multi_x=False)
+
+    plot_2D(poly_degs, K_comp, plot_count = len(K_comp), label = ['Test error','Training error','K5','K6','K7','K8','K9','K10'],
+        title=regression_method + " Kfold prediction for test error " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= regression_method + ' Kfold_test.pdf', multi_x=False)
 
 
 def make_predictions(models, x_test):
