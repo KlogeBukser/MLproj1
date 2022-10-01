@@ -5,12 +5,12 @@ from calculate import MSE, R2
 
 class Algorithms:
 
-    def __init__(self, regression_method, resampling_method):
+    def __init__(self, regression_method, ):
         self.REGRESSION_METHODS = ['ols','ridge']
         self.RESAMPLING_METHODS = ['none','boot','cross']
 
         self.regression_method = regression_method
-        self.resampling_method = resampling_method
+        
 
         self.assign_algos()
 
@@ -20,21 +20,16 @@ class Algorithms:
         if self.regression_method not in self.REGRESSION_METHODS:
             raise Exception('Invalid regression_method')
 
-        if self.resampling_method not in self.RESAMPLING_METHODS:
-            raise Exception('Invalid resampling_method')
-
+        
     def assign_algos(self):
 
         self.check_health()
-
         self.assign_reg()
-        self.assign_resample()
 
 
     def assign_reg(self):
         """assign the correct regression_method to self.resample
 
-        :resampling_method: string
 
         """
         if self.regression_method == 'ols':
@@ -43,30 +38,6 @@ class Algorithms:
         if self.regression_method == 'ridge':
             self.find_beta = self.best_ridge_beta
 
-
-    def assign_resample(self):
-        """assign the correct resampling_method to self.resample
-
-        :resampling_method: string
-
-        """
-        if self.resampling_method == 'none':
-            self.one_resample = self.none_resample
-
-        elif self.resampling_method == 'boot':
-            self.one_resample = self.one_boot
-            """
-            self.start_resample = self.start_boot
-            self.resample_predict = self.boot_predict
-            self.end_resample = self.end_boot
-            """
-
-        elif self.resampling_method == 'cross':
-            pass
-            """
-            self.folds = None
-            self.one_resample = self.one_cross
-            """
 
     def find_beta_ols(self, X, y):
         ''' Finds beta using OLS '''
@@ -132,9 +103,6 @@ class Algorithms:
 
         return betas
 
-    def none_resample(self, X, z):
-        return X, z
-
     def one_boot(self, X, z):
         X_ = np.empty(X.shape)
         z_ = np.empty(z.shape)
@@ -149,7 +117,7 @@ class Algorithms:
 class Model:
     """Regression model"""
 
-    def __init__(self,polydeg,x_train,z_train, train_name = "train", regression_method='ols', resampling_method='none', n_res = 1):
+    def __init__(self,polydeg,x_train,z_train, train_name = "train", regression_method='ols', n_res = 1):
         # Collects the feature functions for a "2 variable polynomial of given degree"
         # Saves integers describing polynomial degree and number of features
         # Takes training data, saves z_train the design matrix X_train
@@ -160,7 +128,7 @@ class Model:
         self.X_dict = {train_name:self.design(x_train)}
 
         # NEW, unstable
-        self.algorithms = Algorithms(regression_method, resampling_method)
+        self.algorithms = Algorithms(regression_method)
         self.n_res = n_res
         self.betas = self.algorithms.resample(self.X_dict["train"],self.z_train,n_res)
 
@@ -217,7 +185,7 @@ class Model:
 
             for j in range(n_lambs):
                 beta = self.algorithms.find_beta_ridge(X_train, z_train, lambdas[j])
-                z_pred = np.dot(X_test,beta)
+                z_pred = X_test @ beta
                 scores[j,i] = score_func(z_test,z_pred)
 
             # Adding the test fold to the back of the folds
