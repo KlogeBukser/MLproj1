@@ -61,6 +61,10 @@ def make_predictions_boot(models,prediction_names,n_boots = 100):
 
 def plot_MSE_comparison2(z_data, z_predicts, regression_method = 'ols'):
     ''' Under development
+
+    z_data: dictionary of z's
+    z_predicts: dictionary of z's
+
     This method is functional, but messy at the moment.
     It does the same thing as plot plot_MSE_comparison, but does not use the models at all.
     This lets us skip making, and training new models for every plot we need'''
@@ -76,10 +80,10 @@ def plot_MSE_comparison2(z_data, z_predicts, regression_method = 'ols'):
 
     # Plots and saves plot of MSE comparisons
     plot_2D(poly_degs, list(MSE_dict.values()), plot_count = 2, label = list(MSE_dict.keys()),
-        title=regression_method + " MSE comparison ",x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
+        title=regression_method + " MSE comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
 
-def plot_MSE_comparison(models, z_test, regression_method = 'ols', resampling_method='boot'):
+def plot_MSE_comparison(models, z_test, n, regression_method = 'ols'):
     ''' Makes models for every polynomial degree up to the input
     Uses bootstrap method for resampling
     Plots MSE on the Test data, entire Training data, and bootstrap samples '''
@@ -103,25 +107,26 @@ def plot_MSE_comparison(models, z_test, regression_method = 'ols', resampling_me
         for i in range(5):
             err_dict['k%d' % (i+1)][deg] = kfold_scores[i]
 
-        """
-        if (resampling_method == 'none'):
-            err_dict['Test'][deg] = MSE(z_test, z_pred)
-            err_dict['Train'][deg] = MSE(z_train, z_fit)
-            #err_dict['biases'][deg] = biases[i] = cal_bias(z_test, z_pred)
-            #err_dict['variances'][deg] = cal_variance(z_test, z_pred)
+       
+        # if (resampling_method == 'none'):
+        #     err_dict['Test'][deg] = MSE(z_test, z_pred)
+        #     err_dict['Train'][deg] = MSE(z_train, z_fit)
+        #     err_dict['biases'][deg] = biases[i] = cal_bias(z_test, z_pred)
+        #     err_dict['variances'][deg] = cal_variance(z_test, z_pred)
 
-        if (resampling_method == 'boot'):
-            err_dict['Test'][deg] = MSE(z_test, z_pred)
-            err_dict['Train'][deg] = MSE(z_train, z_fit)
-            #err_dict['biases'][deg] = biases[i] = cal_bias(z_test, z_pred[:,i]) for i in range(model.n_res))
-            #err_dict['variances'][deg] = cal_variance(z_test, z_pred[:,i]) for i in range(model.n_res))
-        """
+        # if (resampling_method == 'boot'):
+        #     err_dict['Test'][deg] = MSE(z_test, z_pred)
+        #     err_dict['Train'][deg] = MSE(z_train, z_fit)
+        #     err_dict['biases'][deg] = biases[i] = cal_bias(z_test, z_pred[:,i]) for i in range(model.n_res)
+        #     err_dict['variances'][deg] = cal_variance(z_test, z_pred[:,i]) for i in range(model.n_res)
+        
 
 
 
     # Plots and saves plot of MSE comparisons
     plot_2D(poly_degs, list(err_dict.values()), plot_count = 7, label = list(err_dict.keys()),
-        title=regression_method + " MSE comparison ",x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
+        title=regression_method + " MSE comparison " + str(n**2) + ' points' ,x_title="polynomial degree",y_title="MSE",
+        filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
     # Plot bias variance trade off for bootstrap samples (poly degs)
     #plot_2D(poly_degs, [biases,variances], plot_count=2, label=['biases','variances'],
@@ -161,23 +166,18 @@ def plot_scores_beta(models, z_test, regression_method='ols'):
     # Plots MSE score over polynomial degrees
     plot_2D(poly_degs,score_dict['MSE'],title=regression_method + " Mean Squared Error", x_title="polynomial degree", y_title="MSE", filename=regression_method + ' MSE.pdf')
 
-def plot_bias_var(z_test, z_pred, poly_degs):
-
-    pass
 
 
-
-
-def plot_MSEs(models, z_test, nlambdas=100, regression_method='ols', resample_method='boot'):
+def plot_MSEs(models, z_test, nlambdas=100,regression_method='ols', resample_method='boot', n=20):
 
     print("Regression method : ", regression_method)
     assert regression_method in ALLOWED_METHODS, ERR_INVALID_METHOD
 
     if regression_method == 'lasso':
-        plot_MSE_lasso(models, z_test, nlambdas) # does nothing rn
+        plot_MSE_lasso(models, z_test, nlambdas,n) # does nothing rn
 
     else:
-        plot_MSE_comparison(models, z_test, regression_method=regression_method)
+        plot_MSE_comparison(models, z_test, n, regression_method=regression_method)
 
 
 def plot_MSE_lasso(models, z_test, nlambdas):
