@@ -51,7 +51,7 @@ def make_predictions_boot(models, x_test, n_boots = 100):
     return z_pred, z_fit
 
 
-def plot_boot(z_train,z_test,z_pred,z_fit):
+def plot_boot(n,z_train,z_test,z_pred,z_fit,regression_method, skip_zero = False):
     """ Plots MSE score for models against their polynomial degree on test set and training set.
     For bootstrap predictions
 
@@ -60,21 +60,27 @@ def plot_boot(z_train,z_test,z_pred,z_fit):
     :z_pred: 2D array_like
 
     """
+    if (skip_zero):
+        z_pred = z_pred[1:]
+        z_fit = z_fit[1:]
+
     n_pol = z_pred.shape[0]
     MSE_dict = make_container(['test','train','bias','variance'],n_pol)
-    regression_method = "idgaf"
     poly_degs = np.arange(n_pol)
     for i in poly_degs:
         MSE_dict['test'][i] = MSE(z_test, z_pred[i])
         MSE_dict['train'][i] = MSE(z_train,z_fit[i])
-        MSE_dict['bias'][i] = np.mean(cal_bias(z_test,z_pred[i]))
-        MSE_dict['variance'][i] = np.mean(cal_variance(z_pred[i]))
+        MSE_dict['bias'][i] = cal_bias(z_test,z_pred[i])
+        MSE_dict['variance'][i] = cal_variance(z_pred[i])
 
-    plot_2D(poly_degs, list(MSE_dict.values()), plot_count = 4, label = list(MSE_dict.keys()),
-        title=regression_method + " MSE comparison " + 'n**2' + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
+    if skip_zero:
+        poly_degs += 1
+    plot_2D(poly_degs, [MSE_dict['test'],MSE_dict['train']], plot_count = 2, label = ['test','train'],
+        title=regression_method + " MSE comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
 
-
+    plot_2D(poly_degs, [MSE_dict['test'],MSE_dict['bias'],MSE_dict['variance']], plot_count = 3, label = ['test','bias','variance'],
+        title=regression_method + " Bias-Variance " + str(n**2) + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' BiVa.pdf', multi_x=False)
 
 
 def make_predictions(models, x_test):
@@ -96,14 +102,14 @@ def make_predictions(models, x_test):
     return z_pred, betas
 
 
-def plot_MSE_R2(z_test, z_pred):
+def plot_MSE_R2(n,z_test, z_pred, regression_method):
     """ Plots MSE score as well as R2 score for models against their polynomial degree
 
     :z_test: array_like
     :z_pred: 2D array_like
 
     """
-    regression_method = 'whatever'
+
     n_pol = z_pred.shape[0]
     poly_degs = np.arange(n_pol)
     MSEs = np.empty(n_pol)
@@ -113,27 +119,24 @@ def plot_MSE_R2(z_test, z_pred):
     for i in poly_degs:
         MSEs[i] = MSE(z_test,z_pred[i])
         R2s[i] = R2(z_test,z_pred[i])
-        bias[i] = cal_bias(z_test,z_pred[i])
-        variance[i] = cal_variance(z_pred[i])
 
     # Plots R2 score over polynomial degrees
-    plot_2D(poly_degs, R2s, title=regression_method + " R$^2$ Score ",x_title="polynomial degree",y_title="R2",filename= regression_method + ' R2.pdf')
+    plot_2D(poly_degs, R2s, title=regression_method + " R$^2$ Score " + str(n**2) + ' points',x_title="polynomial degree",y_title="R2",filename= regression_method + ' R2.pdf')
 
     # Plots MSE score over polynomial degrees
-    plot_2D(poly_degs,MSEs,title=regression_method + " Mean Squared Error", x_title="polynomial degree", y_title="MSE", filename=regression_method + ' MSE.pdf')
+    plot_2D(poly_degs,MSEs,title=regression_method + " Mean Squared Error" + str(n**2) + ' points', x_title="polynomial degree", y_title="MSE", filename=regression_method + ' MSE.pdf')
 
 
-def plot_beta(betas):
+def plot_beta(n,betas,regression_method):
     """ Plots of a set of beta vectors against number of features in the corresponding model
 
     :betas: list of arrays
 
     """
-    regression_method = 'regmeth'
     beta_ranges = [np.arange(len(beta)) for beta in betas]
 
     # Plots beta vectors for each polynomial degree, with number of features on x-axis
-    plot_2D(beta_ranges, betas, plot_count = len(betas), title=regression_method + " beta ",x_title="features",y_title="Beta",filename= regression_method + ' beta.pdf')
+    plot_2D(beta_ranges, betas, plot_count = len(betas), title=regression_method + " beta " + str(n**2) + ' points',x_title="features",y_title="Beta",filename= regression_method + ' beta.pdf')
 
 
 """  Old code  (or not currently in use) """

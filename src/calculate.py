@@ -45,4 +45,4 @@ def cal_variance(z_pred):
     :returns: variance
 
     """
-    return np.mean( np.var(z_pred, keepdims=True) )
+    return np.mean( np.var(z_pred, axis=1, keepdims=True) )

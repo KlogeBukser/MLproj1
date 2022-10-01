@@ -39,18 +39,18 @@ for n in (20,30,40):
 
 
     # Finds prediction values without resampling
-    #z_pred, betas = make_predictions(models, x_test)
+    z_pred, betas = make_predictions(models[:5], x_test)
 
     # Plots desired values for the model without resampling
-    #plot_MSE_R2(z_test, z_pred)
-    #plot_beta(betas)
+    plot_MSE_R2(n,z_test, z_pred, regression_method = regression_method)
+    plot_beta(n,betas, regression_method = regression_method)
+
 
     # Finds prediction values with the bootstrap method
     z_pred_b, z_fit_b = make_predictions_boot(models,x_test,n_boots)
 
     # Plots desired values for the (bootstrap) resampled predictions
-    plot_boot(z_train, z_test, z_pred_b, z_fit_b)
+    plot_boot(n,z_train, z_test, z_pred_b, z_fit_b, regression_method = regression_method, skip_zero = False)
 
 
     break
-    #plot_MSEs(boot_models, z_test, regression_method=regression_method, n=n) # plots MSE as a function of polynomial degrees for both no resampling and bootstrap
