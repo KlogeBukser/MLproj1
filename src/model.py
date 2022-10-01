@@ -176,7 +176,7 @@ class Model:
         return self.predict_mat(self.design(x))
 
 
-    def cross_validate(self, k, n_lambs = 100, lamb_range = (-4,4), score_func = MSE):
+    def cross_validate(self, k, n_lambs = 100, lamb_range = (-5,5), score_func = MSE):
         z = self.z_train
         X = self.X_train
 

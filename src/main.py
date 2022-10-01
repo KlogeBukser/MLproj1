@@ -12,7 +12,7 @@ np.random.seed(1)
 # choose regression methods
 
 regression_method = 'ols'
-# regression_method = 'ridge'
+regression_method = 'ridge'
 # regression_method = 'lasso'
 
 
@@ -51,7 +51,7 @@ for n in (20,30,40):
 
     # Plots desired values for the (bootstrap) resampled predictions
     MSE_boot = find_MSE_boot(z_train, z_test, z_pred_b, z_fit_b)
-    MSE_Kfold = find_MSE_Kfold(models,range(5,11))
+    MSE_Kfold = find_MSE_Kfold(models,range(5,11),3)
 
     plot_MSE_resampling(n,MSE_boot,MSE_Kfold,regression_method)
 
