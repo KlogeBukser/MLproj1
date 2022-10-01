@@ -104,8 +104,7 @@ class Model:
         self.polydeg = polydeg
         self.functions = get_2D_pols(self.polydeg)
         self.feature_count = len(self.functions)
-
-        # NEW, unstable
+        self.scaler = None
         self.algorithms = Algorithms(regression_method)
 
     def bootstrap(self, x_test, n_boots):
@@ -158,7 +157,11 @@ class Model:
             for j in range(self.feature_count):
                 design[i,j] = self.functions[j](x[i])
 
-        return design
+        if self.scaler is None:
+            self.scaler = np.array([np.mean(design[:,i]) for i in range(self.feature_count)])
+            self.scaler[0] = 0
+
+        return design - self.scaler
 
     def predict_mat(self,X):
         return X @ self.beta

@@ -61,15 +61,18 @@ def plot_boot(z_train,z_test,z_pred,z_fit):
 
     """
     n_pol = z_pred.shape[0]
-    MSE_dict = make_container(["test","train"],n_pol)
+    MSE_dict = make_container(['test','train','bias','variance'],n_pol)
     regression_method = "idgaf"
     poly_degs = np.arange(n_pol)
     for i in poly_degs:
-        MSE_dict["test"][i] = MSE(z_test, z_pred[i])
-        MSE_dict["train"][i] = MSE(z_train,z_fit[i])
+        MSE_dict['test'][i] = MSE(z_test, z_pred[i])
+        MSE_dict['train'][i] = MSE(z_train,z_fit[i])
+        MSE_dict['bias'][i] = np.mean(cal_bias(z_test,z_pred[i]))
+        MSE_dict['variance'][i] = np.mean(cal_variance(z_pred[i]))
 
-    plot_2D(poly_degs, list(MSE_dict.values()), plot_count = 2, label = list(MSE_dict.keys()),
+    plot_2D(poly_degs, list(MSE_dict.values()), plot_count = 4, label = list(MSE_dict.keys()),
         title=regression_method + " MSE comparison " + 'n**2' + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
+
 
 
 
@@ -105,16 +108,19 @@ def plot_MSE_R2(z_test, z_pred):
     poly_degs = np.arange(n_pol)
     MSEs = np.empty(n_pol)
     R2s = np.empty(n_pol)
+    bias = np.empty(n_pol)
+    variance = np.empty(n_pol)
     for i in poly_degs:
         MSEs[i] = MSE(z_test,z_pred[i])
         R2s[i] = R2(z_test,z_pred[i])
+        bias[i] = cal_bias(z_test,z_pred[i])
+        variance[i] = cal_variance(z_pred[i])
 
     # Plots R2 score over polynomial degrees
     plot_2D(poly_degs, R2s, title=regression_method + " R$^2$ Score ",x_title="polynomial degree",y_title="R2",filename= regression_method + ' R2.pdf')
 
     # Plots MSE score over polynomial degrees
     plot_2D(poly_degs,MSEs,title=regression_method + " Mean Squared Error", x_title="polynomial degree", y_title="MSE", filename=regression_method + ' MSE.pdf')
-
 
 
 def plot_beta(betas):

@@ -35,9 +35,9 @@ def cal_bias(z_test, z_pred):
     :returns: bias
 
     """
-    return np.mean( (z_test - np.mean(z_pred, keepdims=True))**2 )
+    return np.mean( (z_test - np.mean(z_pred, axis=1, keepdims=True))**2 )
 
-def cal_variance(z_test, z_pred):
+def cal_variance(z_pred):
     """computes the variance for a given prediction
 
     :z_test: array-like

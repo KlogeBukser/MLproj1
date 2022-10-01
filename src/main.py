@@ -22,7 +22,7 @@ regression_method = 'ols'
 # resampling_method = 'cross'
 
 # Max polynomial degree
-polydeg = 5
+polydeg = 8
 n_boots = 100
 
 # Generates data, and splits it
@@ -39,11 +39,11 @@ for n in (20,30,40):
 
 
     # Finds prediction values without resampling
-    z_pred, betas = make_predictions(models, x_test)
+    #z_pred, betas = make_predictions(models, x_test)
 
     # Plots desired values for the model without resampling
-    plot_MSE_R2(z_test, z_pred)
-    plot_beta(betas)
+    #plot_MSE_R2(z_test, z_pred)
+    #plot_beta(betas)
 
     # Finds prediction values with the bootstrap method
     z_pred_b, z_fit_b = make_predictions_boot(models,x_test,n_boots)
