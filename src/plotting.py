@@ -9,7 +9,7 @@ import os
 ERR_NOT_ENUF_COLORS = 'Colors should be the same length as or longer plot_count'
 ERR_TOO_MANY_PLOTS = 'Too many plots on a single figure'
 ERR_NOT_ENUF_LABELS = 'Label count should match plot count'
-COLORS = 'cbrgmykw' # all default colours
+# COLORS = 'cbrgmykw' # all default colours
 
 
 def simple_plot(x,y,title = "Temporary title",xlab = "x",ylab = "y"):
@@ -60,11 +60,10 @@ def set_paras(x_title,y_title,title=None,filename=None,file_dir='plots',has_labe
         plt.show()
 
 
-def is_valid(plot_count,color, label):
+def is_valid(plot_count, label):
     '''check input validity'''
     assert plot_count <= 8, ERR_TOO_MANY_PLOTS
-    if color:
-        assert len(color) >= plot_count, ERR_NOT_ENUF_COLORS
+    
     if label:
         assert len(label) == plot_count, ERR_TOO_MANY_PLOTS
 
@@ -75,12 +74,12 @@ def make_dir(file_dir):
             os.mkdir(file_dir)
 
 def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=False,filename=None,
-        file_dir='plots',color=COLORS, multi_x=True):
+        file_dir='plots', multi_x=True):
 
     '''plots inputs: x:array like of array like, y:array like of array likes,
     plot_count:int(number of plots),title:string, file_dir:string,colour:string'''
 
-    is_valid(plot_count, color, label)
+    is_valid(plot_count, label)
 
     make_dir(file_dir)
 
@@ -91,14 +90,14 @@ def plot_2D(x, y, plot_count=1,title=None,x_title=None,y_title=None,label=False,
     for i in range(plot_count):
         if multi_x:
             if label:
-                plt.plot(x[i],y[i],label=label[i],color=color[i])
+                plt.plot(x[i],y[i],label=label[i])
             else:
-                plt.plot(x[i],y[i],color=color[i])
+                plt.plot(x[i],y[i])
         else:
             if label:
-                plt.plot(x,y[i],label=label[i],color=color[i])
+                plt.plot(x,y[i],label=label[i])
             else:
-                plt.plot(x,y[i],color=color[i])
+                plt.plot(x,y[i])
 
 
 
