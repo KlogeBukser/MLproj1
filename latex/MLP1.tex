@@ -1,0 +1,183 @@
+
+% VLDB template version of 2020-08-03 enhances the ACM template, version 1.7.0:
+% https://www.acm.org/publications/proceedings-template
+% The ACM Latex guide provides further information about the ACM template
+
+\documentclass[sigconf, nonacm]{acmart}
+
+%% The following content must be adapted for the final version
+% paper-specific
+\newcommand\vldbdoi{XX.XX/XXX.XX}
+\newcommand\vldbpages{XXX-XXX}
+% issue-specific
+\newcommand\vldbvolume{14}
+\newcommand\vldbissue{1}
+\newcommand\vldbyear{2020}
+% should be fine as it is
+\newcommand\vldbauthors{\authors}
+\newcommand\vldbtitle{\shorttitle} 
+% leave empty if no availability url should be set
+\newcommand\vldbavailabilityurl{URL_TO_YOUR_ARTIFACTS}
+% whether page numbers should be shown or not, use 'plain' for review versions, 'empty' for camera ready
+\newcommand\vldbpagestyle{plain} 
+\newcommand{\vect}[1]{\boldsymbol{#1}}
+
+\begin{document}
+\title{Data Analysis and Machine Learning Project 1}
+
+%%
+%% The "author" command and its associated commands are used to deine the authors and their affiliations.
+\author{Torstein Bjelland}
+\affiliation{%
+  \institution{University of Oslo}
+  \city{Oslo}
+  \country{Norway}
+}
+
+\author{Keran Chen}
+\affiliation{%
+  \institution{University of Oslo}
+  \city{Oslo}
+  \country{Norway}
+}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+
+
+\end{abstract}
+
+\maketitle
+
+%%% do not modify the following VLDB block %%
+%%% VLDB block start %%%
+\pagestyle{\vldbpagestyle}
+
+
+%%% VLDB block end %%%
+
+%%% do not modify the following VLDB block %%
+%%% VLDB block start %%%
+\ifdefempty{\vldbavailabilityurl}{}{
+\vspace{.3cm}
+\begingroup\small\noindent\raggedright\textbf{Source code}\\
+The source code, data, and/or other artifacts have been made available at \url{https://github.com/KlogeBukser/MLproj1}.
+\endgroup
+}
+%%% VLDB block end %%%
+
+\section{Introduction}
+Regression analysis is still the most popular analysis one can perform on any sets of data so far. In this project we developed and studied different regression methods and resampling techniques. We then performed analysis on data sets created based on the Franke function \footnote{\begin{align*}
+f(x,y) &= \frac{3}{4}\exp{\left(-\frac{(9x-2)^2}{4} - \frac{(9y-2)^2}{4}\right)}+\frac{3}{4}\exp{\left(-\frac{(9x+1)^2}{49}- \frac{(9y+1)}{10}\right)} \\
+&+\frac{1}{2}\exp{\left(-\frac{(9x-7)^2}{4} - \frac{(9y-3)^2}{4}\right)} -\frac{1}{5}\exp{\left(-(9x-4)^2 - (9y-7)^2\right) }.
+\end{align*}}. 
+We'll discuss first the theory then the implementation of these methods in the context of python, as well as the results and their implications followed by conclusions we've drawn from performing these analysis.
+
+\section{Theory}
+In this section we'll  discuss both theory our implementations.
+\subsection{Cost Functions (Part (a))}
+Since by minimising $ {(y- \tilde y)}^2 $ we can approximate $ f(x) $ by $ \textbf{X} \boldsymbol{\beta}  $, and
+\[ \textbf{y} = f(x) + \epsilon \] where $ \epsilon $ is some normally distributed noise with $ \epsilon \sim \mathcal{N}(0,1)  $
+Then 
+\[ y = f(x) + \epsilon = \textbf{X} \boldsymbol{\beta} + \epsilon  \]  
+\[ \mathbb{E}(\boldsymbol{y}) = \mathbb{E}(\boldsymbol{X \beta} + \mathbb{E}(\epsilon)) \] 
+but $ \mathbb{E}(\epsilon) = 0 $ 
+\[ \mathbb{E}(\boldsymbol{y}) = \mathbb{E}(\boldsymbol{X \beta}) = \boldsymbol{X \beta} \]
+since $ \boldsymbol{X \beta} $ is non-statistical. \\
+Then the result
+\begin{equation}
+	\label{eq:eoy}
+	\mathbb{E}(y_i) = \sum_{j=1}^{n} X_{ij} \beta_j = \boldsymbol{X_{i,*}} \beta
+\end{equation}
+follows naturally using normal matrix multiplication. \\
+\[ Var(y_i) = Var(f(x_i) + \epsilon_i) \] 
+Since $ f(x_i) $ is a non-stocastic variable, the above equation becomes:
+\begin{equation}
+	Var(y_i) = Var(\epsilon) = \sigma^2
+\end{equation}
+Using the expression for $ \hat \beta $ 
+\[ \hat \beta = {(\boldsymbol{X^{T}X})}^{-1} \boldsymbol{X^{T}y} \] 
+\[ \mathbb{E}{(\hat \beta)} = \mathbb{E}{(\boldsymbol{X^{T}X})}^{-1} \boldsymbol{X^{T}y} \] 
+\[ = {(\boldsymbol{X^{T}X})}^{-1} \boldsymbol{X^{T}} \mathbb{E}(\textbf{y}) \] 
+\[ = {(\boldsymbol{X^{T}X})}^{-1} \boldsymbol{X^{T}Xy}  \] 
+by substituting equation~\ref{eq:eoy}. \\
+Then using the definition of matrix inverse we can simplify the equation down to
+\[ \mathbb{E}(\hat \beta) = \beta \] 
+Finally,
+\[ Var(\hat \beta) = \mathbb{E}\{ [\hat \beta - \mathbb{E}(\beta)] {[\hat \beta - \mathbb{E}(\beta)]}^{T}\} \] 
+\[ \mathbb{E}\{[(\boldsymbol{X}^{T}\boldsymbol{X})^{-1}\boldsymbol{X}^{T} \boldsymbol{y}] [(\textbf{X}^{T}\textbf{X})^{-1} \textbf{X}^{T}\textbf{y} - \boldsymbol{\beta}]^{T} \} \] 
+	\[ (\textbf{X}^{T}\textbf{X} )^{-1} \textbf{X}^{T} \mathbb{E}(\textbf{y}\textbf{y}^{T}) \textbf{X} (\textbf{X}^{T}\textbf{X}    )^{-1} - \boldsymbol{\beta \beta^{T}}\] 
+\[ \boldsymbol{ (X^{T}X)^{-1} X^{T} \{ X \beta \beta^{T} X^{T}} + \sigma^2\} \boldsymbol{X (X^{T}X)^{-1} - \beta \beta^{T} } \] 
+\[ = \boldsymbol{\beta \beta^{T}} + \sigma^2 \boldsymbol{(X^{T}X)^{-1} - \beta \beta^{T} } \] 
+\[ = \sigma^2 \boldsymbol{(X^{T}X)^{-1}} \] 
+where $ \mathbb{E}(\boldsymbol{yy^{T}}) = \boldsymbol { X \beta \beta^{T} X^{T}} + \sigma^2 \mathbf{I_{n,n}}$ 
+
+\subsection{OLS}
+For Ordinary Least Square regression, our minimisation problem is
+\[ \min_{\beta \in \mathbb{R}^{p}} \frac{1}{n}\{ \boldsymbol{(y-X \beta)^{T}(y-X\beta)}\} \] we therefore the analytical solution for the most optimal $ \boldsymbol{\beta} $ is:
+\[ \beta = \boldsymbol{(X^{T}X)^{-1}X^{T}y} \] \footnote{from lecture notes}
+The centering is performed by subtracting the mean value of the column from each value, by doing that we make sure the mean is $ 0 $ for each column. The scaling is done by dividing each value by its standard deviation. Standardisation essential in machine learning as it avoids the case where different feature vary tremendously in size, since we are dealing with a regression problem in which we try to minimise the cost function. If the data is not scaled, large difference will cause the minimisation to be slow as some step sizes are larger than others.
+
+\subsection{Bias-Variance Trade-off}
+Because we're using the Mean Squared Error (MSE) to determine how good our model is, it's helpful to know what the MSE actually describes. It can be shown that by manipulating the mathematical expression for MSE, we can rewrite it as a sum of three terms.\\
+
+We start by rewriting the squared error, by adding and subtracting the mean value of the model.
+
+\begin{equation*}
+    \left[(\vect{z} - \vect{\Tilde z})\right]^2 = \left[(\vect{z} -\mathbb{E}(\vect{\Tilde{z}}))  - (\vect{\Tilde z} - \mathbb{E}(\vect{\Tilde{z}}))\right]^2 
+\end{equation*}
+
+\begin{equation*}
+    = (\vect{z} -\mathbb{E}(\vect{\Tilde{z}}))^2 + (\vect{\Tilde z} - \mathbb{E}(\vect{\Tilde{z}}))^2 - 2(\vect{\Tilde z} - \mathbb{E}(\vect{\Tilde{z}}))(\vect{z} -\mathbb{E}(\vect{\Tilde{z}}))
+\end{equation*}
+
+
+We assume that the data can be described by a function with added noise with a gaussian distribution. We insert the substitution $\vect{z} \to \vect{f} + \vect\sigma$
+
+\subsection{Resampling Techniques}
+\subsubsection{Bootstrap}%
+\label{ssub:Bootstrap}
+
+\subsubsection{K-Fold Cross Validation}%
+\label{ssub:K-Fold Cross Validation}
+
+\subsection{Ridge}
+For Ridge regression, we instead optimise
+\[ \min_{\beta \in \mathbb{R}^{p}} \frac{1}{n} \left | \left|\boldsymbol{y-X\beta} \right | \right |_2^{2} + \lambda \left ||\boldsymbol{\beta}\right||_2^2  \] 
+where $ \lambda $ is the regularisation parameter.
+We can find the analytical expression for the optimal parameters to be
+\[ \hat \beta = \boldsymbol{(X^{T}X} + \lambda \boldsymbol{I)^{-1} X^{T} y}  \] 
+
+\subsection{Lasso}
+For lasso regression, we optimise
+\[ \min_{\beta \in \mathbb{R}^{p}} \frac{1}{n} \boldsymbol{||y-X\beta||_2^2 + } \lambda||\boldsymbol{\beta||_1} \] 
+
+\section{Implementation and Code}
+In this section we discuss the structure of the code and the implementation of the above discussed algorithms with demonstrations, selected run in order to reproduce results.
+\subsection{Structure}
+
+\section{Results and Analysis}
+In this section we present our results and discuss the contexts and relate them to other relevant results.
+\subsection{Plots}
+\section{Conclusion}
+conclusions and perspectives
+discussion of pros and cons of methods and possible improvements.
+
+\section*{Theory}
+
+\section*{Appendix}
+
+\begin{acks}
+
+\end{acks}
+
+%\clearpage
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{sample}
+
+\end{document}
+\endinput
+f
