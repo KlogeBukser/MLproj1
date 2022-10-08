@@ -8,10 +8,8 @@ def R2(z_test,z_pred):
     :returns: R squared score
 
     """
-    n = len(z_test)
-    avg = np.mean(z_test)*np.ones(n)
 
-    return 1 - np.mean((z_test - z_pred)**2)/np.mean((z_test - avg)**2)
+    return 1 - np.mean((z_test - z_pred)**2)/np.mean((z_test - np.mean(z_test))**2)
 
 
 # some of these are from lecture notes with modification
