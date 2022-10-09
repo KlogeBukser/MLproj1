@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from generate import generate_data_Franke
+from generate import *
 from produce_results import *
 
 np.random.seed(1)
@@ -56,3 +56,18 @@ if (ridge):
     MSE_Kfold = find_MSE_Kfold(models, folds = 6)
 
     plot_MSE_resampling(n,MSE_boot,MSE_Kfold,'ridge')
+
+
+# part g
+terrain_datas = ['SRTM_data_Norway_1.tif', 'SRTM_data_Norway_2.tif']
+
+for terrain_data in terrain_datas:
+    x,terrain = prep_terrain(terrain_data)
+    continue
+
+# test part g
+# x,terrain = prep_terrain('SRTM_data_Norway_1.tif')
+# print(x.shape)
+# print(terrain.shape)
+
+
