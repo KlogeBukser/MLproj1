@@ -148,6 +148,12 @@ def lasso():
             for j in range(func_count):
                 X[i,j] = functions[j](x_train[i])
 
+        n_test = x_test.shape[0]
+        X_test = np.ones((n_test, func_count))
+        for i in range(n_test):
+            for j in range(func_count):
+                X[i,j] = functions[j](x_test[i])
+
         # will scale data with StandardScaler
 
         mse = np.zeros(nlambdas)
@@ -159,8 +165,9 @@ def lasso():
             reg_lasso = make_pipeline(StandardScaler(with_mean=False), linear_model.Lasso(lmb))
             reg_lasso.fit(X,z_train)
             z_pred = reg_lasso.predict(X)
+            z_pred_test = reg_lasso.predict(X_test)
 
-            mse[i] = MSE(z_test,z_pred)
+            mse[i] = MSE(z_test,z_pred_test)
             mse_train[i] = MSE(z_train,z_pred)
 
         mses.append(mse)
@@ -177,15 +184,19 @@ ols(8)
 # lasso()
 
 # part g
-"""
+# TODO: renaming the plotting files
 terrain_datas = ['SRTM_data_Norway_1.tif', 'SRTM_data_Norway_2.tif']
-
+x_size = 20
+y_size = 20
 for terrain_data in terrain_datas:
 
-    xy,terrain = prep_terrain(terrain_data)
-    x_train, x_test, z_train, z_test = train_test_split(xy,terrain)
-    # TODO: 3 regression, cross-validation
+    xy,terrain = prep_terrain(terrain_data,x_size, y_size)
 
-    # SUPER SLOW!!!
-    # ols()
-"""
+    # print(xy,terrain)
+    # print(xy.shape)
+    # print(terrain.shape)
+    x_train, x_test, z_train, z_test = train_test_split(xy,terrain)
+
+    ols()
+    # ridge()
+    # lasso()
