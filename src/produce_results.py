@@ -35,48 +35,6 @@ def find_MSE_Kfold(models, folds):
     return MSEs
 
 
-def make_predictions_boot(models, x_test, n_boots = 100):
-    """ Makes predictions on models with bootstrap resampling
-
-    :models: array_like of Model objects
-    :x_test: array_like of tuples
-    :n_boots: int, number of bootstraps
-    :returns: 2D array_like, 2D array_like
-
-    """
-    n_pol = len(models)
-    n_test = len(x_test)
-    n_train = models[0].X_train.shape[0]
-    poly_degs = np.arange(n_pol)
-    z_pred = np.empty((n_pol, n_test, n_boots))
-    z_fit = np.empty((n_pol, n_train, n_boots))
-
-    for i, model in enumerate(models):
-        z_pred[i], z_fit[i] = model.bootstrap(x_test,n_boots)
-    return z_pred, z_fit
-
-
-def find_MSE_boot(z_train,z_test,z_pred,z_fit):
-    """ Plots MSE score for models against their polynomial degree on test set and training set.
-    For bootstrap predictions
-
-
-    :z_test: array_like
-    :z_pred: 2D array_like
-
-    """
-
-    n_pol = z_pred.shape[0]
-    MSE_dict = make_container(['test','train','bias','variance'],n_pol)
-    for i in range(n_pol):
-
-        MSE_dict['test'][i] = MSE(z_test, z_pred[i])
-        MSE_dict['train'][i] = MSE(z_train,z_fit[i])
-        MSE_dict['bias'][i] = cal_bias(z_test,z_pred[i])
-        MSE_dict['variance'][i] = cal_variance(z_pred[i])
-
-    return MSE_dict
-
 
 def plot_MSE_lambda(n,test,lambdas):
     n_pol = test.shape[0]
@@ -87,80 +45,36 @@ def plot_MSE_lambda(n,test,lambdas):
         title='Ridge' + " Test-MSE " + str(n**2) + ' points',x_title="Lambda",y_title="Error",filename= 'Ridge' + ' BiVa_boot.pdf', multi_x=False)
 
 
+def plot_ridge(n,models,x_test,z_test,n_boots):
+    z_train = models[0].z_train
 
-def plot_MSE_resampling(n, MSE_boot, MSE_Kfold, regression_method):
-    n_pol = MSE_Kfold.shape[0]
-    poly_degs = np.arange(n_pol)
-
-
-    plot_2D(poly_degs, [MSE_boot['test'],MSE_boot['train']], plot_count = 2, label = ['test','train'],
-        title=regression_method + " MSE comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
-
-    #plot_2D(poly_degs, [MSE_boot['test'],MSE_boot['bias'],MSE_boot['variance']], plot_count = 3, label = ['MSE','bias','variance'],
-    #    title=regression_method + " Bias-Variance " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= regression_method + ' BiVa_boot.pdf', multi_x=False)
-
-    plot_2D(poly_degs, [MSE_boot['test'],MSE_boot['train'],MSE_Kfold], plot_count = 3, label = ['Test error','Training error', 'K-fold predictions'],
-        title=regression_method + " Kfold prediction for test error " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= regression_method + ' Kfold_test.pdf', multi_x=False)
-
-
-def make_predictions(models, x_test):
-    """ Makes predictions on models without resampling
-
-    :models: array_like of Model objects
-    :x_test: array_like of tuples
-    :returns: 2D array_like, list of arrays
-
-    """
     n_pol = len(models)
-    poly_degs = np.arange(n_pol)
-    z_pred = np.empty((n_pol, len(x_test),1))
-    betas = []
+    lambdas = ['best', 0, 0.001, 0.01, 0.1]
+    for lamb in lambdas:
+        model.set_lambda(0)
 
-    for i, model in enumerate(models):
-        z_pred[i] = model.predict(x_test)
-        betas.append(model.beta)
-    return z_pred, betas
+    pred,fit = make_predictions_boot(models,x_test,n_boots)
+    MSE_test = find_boot_MSE(z_test, pred)
+    MSE_Kfold = find_MSE_Kfold(models, folds = 6)
+    MSE_comp['ridge'] = MSE_test
 
+    for model in models:
+        model.set_lambda(0)
 
-def plot_MSE_R2(n,z_test, z_pred, regression_method):
-    """ Plots MSE score as well as R2 score for models against their polynomial degree
+    pred,fit = make_predictions_boot(models,x_test,n_boots)
+    MSE_boot = find_MSE_boot(z_train, z_test, pred, fit)
+    MSE_comp['ols'] = MSE_boot['test']
 
-    :z_test: array_like
-    :z_pred: 2D array_like
+    plot_2D(range(n_pol), [MSE_comp['ridge'],MSE_comp['ols']], plot_count = 2, label = ['Ridge','OLS'],
+        title='Ridge' + " OLS comparison " + str(n**2) + ' points',x_title="Lambda",y_title="Error",filename= 'Ridge' + ' BiVa_boot.pdf', multi_x=False)
 
-    """
-
-    n_pol = z_pred.shape[0]
-    poly_degs = np.arange(n_pol)
-    MSEs = np.empty(n_pol)
-    R2s = np.empty(n_pol)
-    for i in poly_degs:
-        MSEs[i] = MSE(z_test,z_pred[i])
-        R2s[i] = R2(z_test,z_pred[i])
-
-    # Plots R2 score over polynomial degrees
-    plot_2D(poly_degs, R2s, title=regression_method + " R$^2$ Score " + str(n**2) + ' points',x_title="polynomial degree",y_title="R2",filename= regression_method + ' R2.pdf')
-
-    # Plots MSE score over polynomial degrees
-    plot_2D(poly_degs,MSEs,title=regression_method + " Mean Squared Error" + str(n**2) + ' points', x_title="polynomial degree", y_title="MSE", filename=regression_method + ' MSE.pdf')
+    plot_2D(range(n_pol), [MSE_comp['ridge'],MSE_comp['ols'],MSE_Kfold], plot_count = 3, label = ['Test error','Training error', 'K-fold predictions'],
+        title='Ridge' + " Kfold prediction for test error " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= regression_method + ' Kfold_test.pdf', multi_x=False)
 
 
-def plot_beta(n,betas,regression_method):
-    """ Plots of a set of beta vectors against number of features in the corresponding model
-
-    :betas: list of arrays
-
-    """
-    beta_ranges = [np.arange(len(beta)) for beta in betas]
-
-    # Plots beta vectors for each polynomial degree, with number of features on x-axis
-    n_points = n**2
-    plot_2D(beta_ranges, betas, plot_count = len(betas), title=regression_method + " beta " + str(n_points) + ' points',x_title="features",y_title="Beta",filename= regression_method + ' beta.pdf')
 
 
 def plot_lmb_MSE(lmbs, mses, regression_method, labels):
-    
+
     '''plot MSE vs lambdas for ridge and lasso'''
     plot_2D(lmbs, mses, plot_count = len(mses), title=regression_method+' MSE vs lambdas', x_title='log10(lambdas)', y_title='MSE',label=labels, multi_x=False)
-
-

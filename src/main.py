@@ -15,51 +15,92 @@ np.random.seed(1)
 
 # Max polynomial degree
 
-n_boots = 10
+n_boots = 20
 n = 20
-polydeg = 8
-n_pol = polydeg + 1
+#polydeg = 8
+#n_pol = polydeg + 1
 
 # ols = False
 # ridge = True
 # lasso = False
 
-x, z = generate_data_Franke(n, noise = 1)
+x, z = generate_data_Franke(n, noise = 0.8)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 
 # Generates data, and splits it
 
-def ols():
+def ols(polynomial_degree = 5):
     # Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
-    models = []
-    for deg in range(polydeg + 1):
-        models.append(Model(deg))
-        models[deg].train(x_train, z_train)
 
-    # Finds prediction values without resampling
-    z_pred, betas = make_predictions(models[:6], x_test)
-
-    # Plots desired values for the model without resampling
-    plot_MSE_R2(n,z_test, z_pred, regression_method = 'ols')
-    plot_beta(n,betas, regression_method = 'ols')
+    n_pol = polynomial_degree + 1
+    poly_degs = np.arange(n_pol)
+    test_score, train_score, bias, var, Kfold_score = np.empty((5,n_pol))
 
 
-    # Finds prediction values with the bootstrap method
-    z_pred_b, z_fit_b = make_predictions_boot(models,x_test,n_boots)
+    n_simple = np.min((6,n_pol))
+    simple_degs = np.arange(n_simple)
+    simple_MSE, simple_R2 = np.empty((2,n_simple))
+    betas = []
+    beta_ranges = []
 
-    # Plots desired values for the (bootstrap) resampled predictions
-    MSE_boot = find_MSE_boot(z_train, z_test, z_pred_b, z_fit_b)
-    MSE_Kfold = find_MSE_Kfold(models, folds = 6)
+    for deg in poly_degs:
 
-    plot_MSE_resampling(n,MSE_boot,MSE_Kfold,'ols')
+        model = Model(deg)
+        model.train(x_train,z_train)
+
+        z_pred, z_fit = model.bootstrap(x_test,n_boots)
+
+        test_score[deg] = MSE(z_test,z_pred)
+        train_score[deg] = MSE(z_train,z_fit)
+        bias[deg] = cal_bias(z_test, z_pred)
+        var[deg] = cal_variance(z_pred)
+        Kfold_score[deg] = model.cross_validate(6)
+
+
+        if (deg < n_simple):
+            betas.append(model.beta)
+            beta_ranges.append(np.arange(model.feature_count))
+
+            z_pred_simple = model.predict(x_test)
+
+            simple_MSE[deg] = MSE(z_test,z_pred_simple)
+            simple_R2[deg] = R2(z_test,z_pred_simple)
+
+
+
+    # Plots R2 score over polynomial degrees
+    plot_2D(simple_degs, simple_R2, title='ols' + " R$^2$ Score " + str(n**2) + ' points',x_title="polynomial degree",y_title="R2",filename= 'ols' + ' R2.pdf')
+
+    # Plots MSE score over polynomial degrees
+    plot_2D(simple_degs,simple_MSE,title='ols' + " Mean Squared Error" + str(n**2) + ' points', x_title="polynomial degree", y_title="MSE", filename='ols' + ' MSE.pdf')
+
+    plot_2D(beta_ranges, betas, plot_count = len(betas), title='ols' + " beta " + str(n**2) + ' points',x_title="features",y_title="Beta",filename= 'ols' + ' beta.pdf')
+
+
+
+    plot_2D(poly_degs, [test_score,bias,var], plot_count = 3, label = ['MSE','bias','variance'],
+        title='ols' + " Bias-Variance " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'ols' + ' BiVa_boot.pdf', multi_x=False)
+
+    plot_2D(poly_degs, [test_score,train_score], plot_count = 2, label = ['test','train'],
+        title='ols' + " MSE comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="MSE",filename= 'ols' + ' MSE_comp.pdf', multi_x=False)
+
+    plot_2D(poly_degs, [test_score,train_score,Kfold_score], plot_count = 3, label = ['Test error','Training error', 'K-fold predictions'],
+        title='ols' + " Kfold prediction for test error " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'ols' + ' Kfold_test.pdf', multi_x=False)
+
 
 def ridge():
     models = []
-    n_lambdas = 20
+
 
     for deg in range(n_pol):
         models.append(Ridge(deg))
         models[deg].train(x_train,z_train,'best')
+
+    #plot_ridge(n,models,x_test,z_test,n_boots)
+    pred,fit = make_predictions_boot(models,x_test,n_boots)
+    MSE_test = find_test_MSE(z_test, pred)
+    MSE_Kfold = find_MSE_Kfold(models, folds = 6)
+
 
     ols_z_pred, ols_z_fit = make_predictions_boot(models,x_test,n_boots)
     MSE_boot = find_MSE_boot(z_train, z_test, ols_z_pred, ols_z_fit)
@@ -67,12 +108,11 @@ def ridge():
 
     plot_MSE_resampling(n,MSE_boot,MSE_Kfold,'ridge')
 
-    best_lambs = [model.lamb for model in models]
-
+    return
+    n_lambdas = 20
     lambdas = np.logspace(-4,4,n_lambdas)
     test_score = np.empty((n_pol,n_lambdas))
     train_score = np.empty((n_pol,n_lambdas))
-
 
     for i,lamb in enumerate(lambdas):
         for model in models:
@@ -132,11 +172,12 @@ def lasso():
 
 
 # calls
-# ols()
+ols(8)
 # ridge()
-lasso()
+# lasso()
 
 # part g
+"""
 terrain_datas = ['SRTM_data_Norway_1.tif', 'SRTM_data_Norway_2.tif']
 
 for terrain_data in terrain_datas:
@@ -147,3 +188,4 @@ for terrain_data in terrain_datas:
 
     # SUPER SLOW!!!
     # ols()
+"""
