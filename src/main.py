@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -9,41 +8,32 @@ from produce_results import *
 np.random.seed(1)
 
 
-# choose regression methods
-
-regression_method = 'ols'
-regression_method = 'ridge'
-# regression_method = 'lasso'
-
-
-# choose resampling methods
-
-# resampling_method = 'boot'
-# resampling_method = 'cross'
-
 # Max polynomial degree
-polydeg = 5
+polydeg = 8
 n_boots = 100
+n = 20
+
+ols = False
+ridge = True
+lasso = False
+
+x, z = generate_data_Franke(n, noise = 0.4)
+x_train, x_test, z_train, z_test = train_test_split(x,z)
 
 # Generates data, and splits it
-for n in (20,30,40):
-    x, z = generate_data_Franke(n,noise = 0.3)
-    x_train, x_test, z_train, z_test = train_test_split(x,z)
-
-
+if (ols):
     # Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
     models = []
     for deg in range(polydeg + 1):
-        models.append(Model(deg, regression_method = regression_method))
-        models[deg].fit(x_train,z_train)
-
+        models.append(Model(deg))
+        models[deg].train(x_train, z_train)
 
     # Finds prediction values without resampling
-    #z_pred, betas = make_predictions(models[:5], x_test)
+    z_pred, betas = make_predictions(models[:6], x_test)
 
     # Plots desired values for the model without resampling
-    #plot_MSE_R2(n,z_test, z_pred, regression_method = regression_method)
-    #plot_beta(n,betas, regression_method = regression_method)
+    plot_MSE_R2(n,z_test, z_pred, regression_method = 'ols')
+    plot_beta(n,betas, regression_method = 'ols')
 
 
     # Finds prediction values with the bootstrap method
@@ -51,8 +41,18 @@ for n in (20,30,40):
 
     # Plots desired values for the (bootstrap) resampled predictions
     MSE_boot = find_MSE_boot(z_train, z_test, z_pred_b, z_fit_b)
-    MSE_Kfold = find_MSE_Kfold(models,range(5,11),3)
+    MSE_Kfold = find_MSE_Kfold(models, folds = 6)
 
-    plot_MSE_resampling(n,MSE_boot,MSE_Kfold,regression_method)
+    plot_MSE_resampling(n,MSE_boot,MSE_Kfold,'ols')
 
-    break
+if (ridge):
+    models = []
+    for deg in range(polydeg + 1):
+        models.append(Ridge(deg))
+        models[deg].train(x_train,z_train,'best')
+
+    z_pred_b, z_fit_b = make_predictions_boot(models,x_test,n_boots)
+    MSE_boot = find_MSE_boot(z_train, z_test, z_pred_b, z_fit_b)
+    MSE_Kfold = find_MSE_Kfold(models, folds = 6)
+
+    plot_MSE_resampling(n,MSE_boot,MSE_Kfold,'ridge')

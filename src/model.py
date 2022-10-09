@@ -3,109 +3,39 @@ import numpy as np
 from poly_funcs import get_2D_pols
 from calculate import MSE, R2
 
-class Algorithms:
-
-    def __init__(self, regression_method):
-        self.REGRESSION_METHODS = ['ols','ridge']
-
-        self.regression_method = regression_method
-
-
-        self.assign_algos()
-
-
-    def check_health(self):
-
-        if self.regression_method not in self.REGRESSION_METHODS:
-            raise Exception('Invalid regression_method')
-
-
-    def assign_algos(self):
-
-        self.check_health()
-        self.assign_reg()
-
-
-    def assign_reg(self):
-        """assign the correct regression_method to self.resample
-
-
-        """
-        if self.regression_method == 'ols':
-            self.find_beta = self.find_beta_ols
-
-        if self.regression_method == 'ridge':
-            self.find_beta = self.best_ridge_beta
-
-
-    def find_beta_ols(self, X, y):
-        ''' Finds beta using OLS '''
-        return self.find_beta_ridge(X, y, 0)
-
-
-    def find_beta_ridge(self, X, y, lamb):
-
-        '''return the beta for the given lambda '''
-
-        sqr = X.T @ X
-        dim = sqr.shape[0]
-        mat = sqr-lamb*np.identity(dim)
-
-        if np.linalg.det(mat):
-            inv = np.linalg.inv(mat)             #nf*nf
-
-        else:
-            # psuedoinversion for singular matrices
-            inv = np.linalg.pinv(mat)
-
-        beta = inv @ X.T @ y
-
-        return beta
-
-    def best_ridge_beta(self, X, y, nlambdas=100, lamb_range=(-4,4), min_func=MSE):
-
-        if nlambdas == 1:
-
-            try:
-                lamb = float(lamb_range)
-            except:
-                'For single lambda use integer for lamb_range'
-
-            return self.find_beta_ridge(X, y, lamb_range)
-
-
-        lambdas = np.logspace(lamb_range[0], lamb_range[1], nlambdas)
-        best_beta = self.find_beta_ridge(X, y, lambdas[0])
-        self.best_lamb = lambdas[0]
-
-        for lamb in lambdas:
-            beta = self.find_beta_ridge(X, y, lamb)
-            if self.cmp_beta(X, y, beta, best_beta, cmp_func=min_func):
-                best_beta = beta
-                self.best_lamb = lamb
-
-        return best_beta
-
-    def cmp_beta(self, X, y, beta_1, beta_2, cmp_func):
-        '''return a true if beta_1 has smaller cpm_func and false otherwise '''
-
-        if cmp_func(y, X @ beta_1) < cmp_func(y, X @ beta_2): # ?questionable comparison
-            return True
-        return False
-
 
 class Model:
     """Regression model"""
 
-    def __init__(self, polydeg, regression_method='ols'):
+    def __init__(self, polydeg):
         # Collects the feature functions for a "2 variable polynomial of given degree"
         # Saves integers describing polynomial degree and number of features
         # Takes training data, saves z_train the design matrix X_train
+
         self.polydeg = polydeg
         self.functions = get_2D_pols(self.polydeg)
         self.feature_count = len(self.functions)
         self.is_scaled = False
-        self.algorithms = Algorithms(regression_method)
+
+    def train(self,x,z):
+        self.z_train = z
+        self.X_train = self.design(x)
+        self.beta = self.find_beta(self.X_train,self.z_train)
+
+    def find_beta(self, X, y):
+        ''' Finds beta using OLS '''
+        sqr = X.T @ X
+
+        if np.linalg.det(sqr):
+            inv = np.linalg.inv(sqr)             #nf*nf
+
+        else:
+            # psuedoinversion for singular matrices
+            inv = np.linalg.pinv(sqr)
+
+        beta = inv @ X.T @ y
+
+        return beta
 
     def bootstrap(self, x_test, n_boots):
         """ Predicts on test, and training set
@@ -122,7 +52,7 @@ class Model:
 
         for i in range(n_boots):
             X_, z_ = self.one_boot(X_train,self.z_train)
-            beta = self.algorithms.find_beta(X_, z_).ravel()
+            beta = self.find_beta(X_, z_).ravel()
             z_pred[:,i] = np.dot(X_test, beta)
             z_fit[:,i] = np.dot(X_train, beta)
 
@@ -138,16 +68,6 @@ class Model:
             z_[s] = z[r_int]
         return X_, z_
 
-    def fit(self, x, z):
-        """ Fits the model on training data x, and z
-
-        :x: array_like of tuples
-        :z: array_like
-
-        """
-        self.z_train = z
-        self.X_train = self.design(x)
-        self.beta = self.algorithms.find_beta(self.X_train,self.z_train)
 
     def design(self,x):
         # Uses the features to turn set of tuple values (x,y) into design matrix
@@ -161,22 +81,20 @@ class Model:
             self.design_mean, self.design_std = self.calc_scale(design)
             is_scaled = True
 
-        return design*(self.design_std - self.design_mean)
+        return design#(design - self.design_mean)*self.design_std
 
     def calc_scale(self,X):
         mean = np.array([0] + [np.mean(X[:,i]) for i in range(1,self.feature_count)])
         std = np.array([1] + [1/np.std(X[:,i]) for i in range(1,self.feature_count)])
         return mean, std
 
-    def predict_mat(self,X):
-        return X @ self.beta
 
     def predict(self,x):
         # Makes a prediction for z for the given design matrix
-        return self.predict_mat(self.design(x))
+        return self.design(x) @ self.beta
 
 
-    def cross_validate(self, k, n_lambs = 100, lamb_range = (-5,5), score_func = MSE):
+    def cross_validate(self, k):
         z = self.z_train
         X = self.X_train
 
@@ -186,13 +104,7 @@ class Model:
         gen = np.random.default_rng()
         gen.shuffle(order)
 
-        reg_meth = self.algorithms.regression_method
-
-        if reg_meth == 'ridge':
-            lambdas = np.logspace(lamb_range[0],lamb_range[1],n_lambs)
-            scores = np.empty((k,lambdas.shape[0]))
-        else:
-            scores = np.empty(k)
+        scores = np.empty(k)
 
         fold_len = int(n_z/k)
         folds = [order[i*fold_len:(i+1)*fold_len] for i in range(k - 1)]
@@ -203,30 +115,105 @@ class Model:
             test_indices = folds.pop(0)
             train_indices = [elem for fold in folds for elem in fold]
 
-
             z_test = z[test_indices]
             X_test = X[test_indices]
 
             z_train = z[train_indices]
             X_train = X[train_indices]
 
-            K_mean, K_std = self.calc_scale(X_test)
+            K_mean, K_std = self.calc_scale(X_train)
             X_train = K_std*(X_train - K_mean)
             X_test = K_std*(X_test - K_mean)
 
             # Adding the test fold to the back of the folds
             folds.append(test_indices)
 
-            if reg_meth == 'ols':
-                beta = self.algorithms.find_beta(X_train, z_train)
-                z_pred = X_test @ beta
-                scores[i] = score_func(z_test,z_pred)
-                continue
 
-            for j in range(n_lambs):
-                beta = self.algorithms.find_beta_ridge(X_train, z_train, lambdas[j])
-                z_pred = X_test @ beta
-                scores[i,j] = score_func(z_test,z_pred)
+            beta = self.find_beta(X_train, z_train)
+            z_pred = X_test @ beta
+            scores[i] = MSE(z_test,z_pred)
 
 
         return np.mean(scores)
+
+
+class Ridge(Model):
+    def __init__(self, polydeg):
+        # Collects the feature functions for a "2 variable polynomial of given degree"
+        # Saves integers describing polynomial degree and number of features
+        # Takes training data, saves z_train the design matrix X_train
+        super().__init__(polydeg)
+
+
+    def train(self,x,z,lamb = 'best'):
+
+        self.z_train = z
+        self.X_train = self.design(x)
+        if (lamb == 'best'):
+            self.best_beta()
+            return
+
+        self.lamb = lamb
+        self.beta = self.find_beta(self.X_train, self.z_train)
+
+
+    def find_beta(self, X, z,lamb = 'self'):
+
+        '''return the beta for the given lambda '''
+
+        if (lamb == 'self'):
+            lamb = self.lamb
+
+        sqr = X.T @ X
+        dim = sqr.shape[0]
+
+        mat = sqr - lamb*np.identity(dim)
+
+        if np.linalg.det(mat):
+            inv = np.linalg.inv(mat)
+
+        else:
+            # psuedoinversion for singular matrices
+            inv = np.linalg.pinv(mat)
+
+        beta = inv @ X.T @ z
+
+        return beta
+
+
+    """def cmp_beta(self, X, z, beta_1, beta_2):
+        '''return a true if beta_1 has smaller cpm_func and false otherwise '''
+
+        if (MSE(z, X @ beta_1) < MSE(z, X @ beta_2)): # ?questionable comparison
+            return True
+        return False"""
+
+    def best_beta(self, nlambdas=100, lamb_range=(-3,1)):
+
+        X = self.X_train
+        z = self.z_train
+
+        if nlambdas == 1:
+
+            try:
+                lamb = float(lamb_range)
+            except:
+                'For single lambda use integer for lamb_range'
+
+            return self.find_beta(X, z, lamb_range)
+
+        lambdas = np.logspace(lamb_range[0], lamb_range[-1], nlambdas)
+        best_beta = self.find_beta(X, z, lambdas[0])
+        best_lamb = lambdas[0]
+
+        score = 10
+        for lamb in lambdas:
+            beta = self.find_beta(X, z, lamb)
+            if MSE(z,X @ beta) < score:#self.cmp_beta(X, z, beta, best_beta):
+                best_beta = beta
+                best_lamb = lamb
+                score = MSE(z,X @ beta)
+
+
+        self.lamb = best_lamb
+        self.beta = best_beta
