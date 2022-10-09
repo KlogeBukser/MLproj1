@@ -1,6 +1,11 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn import linear_model
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+from poly_funcs import get_2D_pols
 
 from generate import *
 from produce_results import *
@@ -13,15 +18,16 @@ polydeg = 8
 n_boots = 100
 n = 20
 
-ols = False
-ridge = True
-lasso = False
+# ols = False
+# ridge = True
+# lasso = False
 
 x, z = generate_data_Franke(n, noise = 0.4)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 
 # Generates data, and splits it
-if (ols):
+
+def ols():
     # Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
     models = []
     for deg in range(polydeg + 1):
@@ -45,7 +51,7 @@ if (ols):
 
     plot_MSE_resampling(n,MSE_boot,MSE_Kfold,'ols')
 
-if (ridge):
+def ridge():
     models = []
     for deg in range(polydeg + 1):
         models.append(Ridge(deg))
@@ -57,17 +63,66 @@ if (ridge):
 
     plot_MSE_resampling(n,MSE_boot,MSE_Kfold,'ridge')
 
+def lasso():
+
+    nlambdas = 100
+    lambdas = np.logspace(-4, 4, nlambdas)
+
+    # for plotting 
+    mses = []
+    mses_train = []
+    labels = []
+
+    # get design matrix
+
+    for deg in range(polydeg + 1):
+        functions = get_2D_pols(deg)
+        func_count = len(functions)
+
+        n = x_train.shape[0]
+        X = np.ones((n, func_count))
+        for i in range(n):
+            for j in range(func_count):
+                X[i,j] = functions[j](x_train[i])
+
+        # will scale data with StandardScaler
+        
+        mse = np.zeros(nlambdas)
+        mse_train = np.zeros(nlambdas)
+
+        for i in range(nlambdas):
+            lmb = lambdas[i]
+
+            reg_lasso = make_pipeline(StandardScaler(with_mean=False), linear_model.Lasso(lmb))
+            reg_lasso.fit(X,z_train)
+            z_pred = reg_lasso.predict(X)
+
+            mse[i] = MSE(z_test,z_pred)
+            mse_train[i] = MSE(z_train,z_pred)
+
+        mses.append(mse)
+        mses_train.append(mse_train)
+        labels.append('n = ' + str(deg))
+
+    plot_lmb_MSE(np.log10(lambdas), mses, 'lasso', labels)
+    plot_lmb_MSE(np.log10(lambdas), mses_train, 'lasso training', labels)
+
+
+# calls
+# ols()
+# ridge()
+lasso()
 
 # part g
 terrain_datas = ['SRTM_data_Norway_1.tif', 'SRTM_data_Norway_2.tif']
 
 for terrain_data in terrain_datas:
-    x,terrain = prep_terrain(terrain_data)
-    continue
 
-# test part g
-# x,terrain = prep_terrain('SRTM_data_Norway_1.tif')
-# print(x.shape)
-# print(terrain.shape)
+    xy,terrain = prep_terrain(terrain_data)
+    x_train, x_test, z_train, z_test = train_test_split(xy,terrain)
+    # TODO: 3 regression, cross-validation
+
+    # SUPER SLOW!!!
+    # ols()
 
 

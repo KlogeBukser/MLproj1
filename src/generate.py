@@ -30,6 +30,12 @@ def generate_data_Franke(n = 20, noise = 1):
     return x, z
 
 def prep_terrain(tif_name):
+    '''Format terrain data
+
+    tif_name: string, file name
+    return: xy: 2d array, all combination of x and y 
+    z: array, 
+    '''
 
     # Load the terrain
     terrain = imageio.imread(tif_name)
