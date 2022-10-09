@@ -6,11 +6,6 @@ from model import *
 import numpy as np
 from sklearn import linear_model
 
-ALLOWED_METHODS = ['ols','ridge','lasso']
-
-ERR_INVALID_METHOD = 'Invalid regression_method, allowed methods are {0}, {1}, {2}'
-ERR_INVALID_METHOD.format(*ALLOWED_METHODS)
-
 
 def make_container(container_names,n_pol = None):
     """ Makes empty dictionary container
@@ -159,32 +154,13 @@ def plot_beta(n,betas,regression_method):
     beta_ranges = [np.arange(len(beta)) for beta in betas]
 
     # Plots beta vectors for each polynomial degree, with number of features on x-axis
-    plot_2D(beta_ranges, betas, plot_count = len(betas), title=regression_method + " beta " + str(n**2) + ' points',x_title="features",y_title="Beta",filename= regression_method + ' beta.pdf')
+    n_points = n**2
+    plot_2D(beta_ranges, betas, plot_count = len(betas), title=regression_method + " beta " + str(n_points) + ' points',x_title="features",y_title="Beta",filename= regression_method + ' beta.pdf')
 
 
-"""  Old code  (or not currently in use) """
+def plot_lmb_MSE(lmbs, mses, regression_method, labels):
+    
+    '''plot MSE vs lambdas for ridge and lasso'''
+    plot_2D(lmbs, mses, plot_count = len(mses), title=regression_method+' MSE vs lambdas', x_title='log10(lambdas)', y_title='MSE',label=labels, multi_x=False)
 
 
-"""
-def plot_MSE_lasso(models, z_test, nlambdas):
-
-    '''problematic shit!!'''
-
-    z_train = model[-1].z_train
-    poly_degs = np.arange(models[-1].polydeg + 1)
-    for model in models:
-        MSE_lasso_predicts = np.zeros(nlambdas)
-        lambdas = np.logspace(-4, 4, nlambdas)
-        X_train = model.X_dict["train"]
-        X_test = model.X_dict["test"]
-
-        for lamb in lambdas:
-            reg_lasso = linear_model.Lasso(lamb)
-            reg_lasso.fit(X_train, z_train)
-            z_predict_lasso = reg_lasso.predict(whatever)
-            print(reg_lasso.coef_)
-            MSE_lasso_predicts[lamb] = MSE(z_test,z_predict_lasso)
-
-    plot_2D([polydeg], [MSE_lasso_predicts], title='Lasso MSE', x_title='polynomial degrees',
-            y_title='MSE', filename='lasso MSE')
-"""

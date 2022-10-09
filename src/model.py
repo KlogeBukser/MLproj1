@@ -78,7 +78,7 @@ class Model:
             for j in range(self.feature_count):
                 design[i,j] = self.functions[j](x[i])
 
-        if  not self.is_scaled:
+        if not self.is_scaled:
             self.design_mean, self.design_std = self.calc_scale(design)
             is_scaled = True
 
@@ -198,7 +198,7 @@ class Ridge(Model):
             except:
                 'For single lambda use integer for lamb_range'
 
-            return self.find_beta(X, z, lamb_range)
+            self.beta = self.find_beta(X, z, lamb_range)
 
         lambdas = np.logspace(lamb_range[0], lamb_range[1], nlambdas)
         best_beta = self.find_beta(X, z, lambdas[0])
