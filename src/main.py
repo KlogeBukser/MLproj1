@@ -9,15 +9,17 @@ np.random.seed(1)
 
 
 # Max polynomial degree
-polydeg = 8
-n_boots = 100
+
+n_boots = 10
 n = 20
+polydeg = 8
+n_pol = polydeg + 1
 
 ols = False
 ridge = True
 lasso = False
 
-x, z = generate_data_Franke(n, noise = 0.4)
+x, z = generate_data_Franke(n, noise = 1)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 
 # Generates data, and splits it
@@ -47,12 +49,32 @@ if (ols):
 
 if (ridge):
     models = []
-    for deg in range(polydeg + 1):
+    n_lambdas = 20
+
+    for deg in range(n_pol):
         models.append(Ridge(deg))
         models[deg].train(x_train,z_train,'best')
 
-    z_pred_b, z_fit_b = make_predictions_boot(models,x_test,n_boots)
-    MSE_boot = find_MSE_boot(z_train, z_test, z_pred_b, z_fit_b)
+    ols_z_pred, ols_z_fit = make_predictions_boot(models,x_test,n_boots)
+    MSE_boot = find_MSE_boot(z_train, z_test, ols_z_pred, ols_z_fit)
     MSE_Kfold = find_MSE_Kfold(models, folds = 6)
 
     plot_MSE_resampling(n,MSE_boot,MSE_Kfold,'ridge')
+
+    best_lambs = [model.lamb for model in models]
+
+    lambdas = np.logspace(-4,4,n_lambdas)
+    test_score = np.empty((n_pol,n_lambdas))
+    train_score = np.empty((n_pol,n_lambdas))
+
+
+    for i,lamb in enumerate(lambdas):
+        for model in models:
+            model.set_lambda(lamb)
+
+        pred, fit = make_predictions_boot(models,x_test,n_boots)
+        scores = find_MSE_boot(z_train,z_test, pred, fit)
+        test_score[:,i] = scores['test']
+        train_score[:,i] = scores['train']
+
+    plot_MSE_lambda(n,test_score,lambdas)

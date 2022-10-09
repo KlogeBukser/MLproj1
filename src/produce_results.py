@@ -83,6 +83,16 @@ def find_MSE_boot(z_train,z_test,z_pred,z_fit):
     return MSE_dict
 
 
+def plot_MSE_lambda(n,test,lambdas):
+    n_pol = test.shape[0]
+    poly_degs = np.arange(n_pol)
+
+
+    plot_2D(np.log10(lambdas), test, plot_count = test.shape[0], label = ['Test ' + str(i) for i in range(n_pol)],
+        title='Ridge' + " Test-MSE " + str(n**2) + ' points',x_title="Lambda",y_title="Error",filename= 'Ridge' + ' BiVa_boot.pdf', multi_x=False)
+
+
+
 def plot_MSE_resampling(n, MSE_boot, MSE_Kfold, regression_method):
     n_pol = MSE_Kfold.shape[0]
     poly_degs = np.arange(n_pol)
@@ -91,8 +101,8 @@ def plot_MSE_resampling(n, MSE_boot, MSE_Kfold, regression_method):
     plot_2D(poly_degs, [MSE_boot['test'],MSE_boot['train']], plot_count = 2, label = ['test','train'],
         title=regression_method + " MSE comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="MSE",filename= regression_method + ' MSE_comp.pdf', multi_x=False)
 
-    plot_2D(poly_degs, [MSE_boot['test'],MSE_boot['bias'],MSE_boot['variance']], plot_count = 3, label = ['MSE','bias','variance'],
-        title=regression_method + " Bias-Variance " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= regression_method + ' BiVa_boot.pdf', multi_x=False)
+    #plot_2D(poly_degs, [MSE_boot['test'],MSE_boot['bias'],MSE_boot['variance']], plot_count = 3, label = ['MSE','bias','variance'],
+    #    title=regression_method + " Bias-Variance " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= regression_method + ' BiVa_boot.pdf', multi_x=False)
 
     plot_2D(poly_degs, [MSE_boot['test'],MSE_boot['train'],MSE_Kfold], plot_count = 3, label = ['Test error','Training error', 'K-fold predictions'],
         title=regression_method + " Kfold prediction for test error " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= regression_method + ' Kfold_test.pdf', multi_x=False)

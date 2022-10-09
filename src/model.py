@@ -47,6 +47,7 @@ class Model:
         """
         X_train = self.X_train
         X_test = self.design(x_test)
+
         z_pred = np.empty((X_test.shape[0],n_boots))
         z_fit = np.empty((X_train.shape[0],n_boots))
 
@@ -149,6 +150,10 @@ class Ridge(Model):
 
         self.z_train = z
         self.X_train = self.design(x)
+        self.set_lambda(lamb)
+
+
+    def set_lambda(self,lamb = 'best'):
         if (lamb == 'best'):
             self.best_beta()
             return
@@ -167,9 +172,9 @@ class Ridge(Model):
         sqr = X.T @ X
         dim = sqr.shape[0]
 
-        mat = sqr - lamb*np.identity(dim)
+        mat = sqr + lamb*np.eye(dim,dim)
 
-        if np.linalg.det(mat):
+        if False:#np.linalg.det(mat):
             inv = np.linalg.inv(mat)
 
         else:
@@ -181,14 +186,7 @@ class Ridge(Model):
         return beta
 
 
-    """def cmp_beta(self, X, z, beta_1, beta_2):
-        '''return a true if beta_1 has smaller cpm_func and false otherwise '''
-
-        if (MSE(z, X @ beta_1) < MSE(z, X @ beta_2)): # ?questionable comparison
-            return True
-        return False"""
-
-    def best_beta(self, nlambdas=100, lamb_range=(-3,1)):
+    def best_beta(self, nlambdas=100, lamb_range=(-4,4)):
 
         X = self.X_train
         z = self.z_train
@@ -202,7 +200,7 @@ class Ridge(Model):
 
             return self.find_beta(X, z, lamb_range)
 
-        lambdas = np.logspace(lamb_range[0], lamb_range[-1], nlambdas)
+        lambdas = np.logspace(lamb_range[0], lamb_range[1], nlambdas)
         best_beta = self.find_beta(X, z, lambdas[0])
         best_lamb = lambdas[0]
 
