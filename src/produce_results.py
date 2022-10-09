@@ -160,7 +160,7 @@ def plot_beta(n,betas,regression_method):
 
 def plot_lmb_MSE(lmbs, mses, regression_method, labels):
     
-    '''plot MSE vs lambdas for ridge and lasso'''
-    plot_2D(lmbs, mses, plot_count = len(mses), title=regression_method+' MSE vs lambdas', x_title='log10(lambdas)', y_title='MSE',label=labels, multi_x=False)
+    '''plot MSE vs lambdas for lasso'''
+    plot_2D(lmbs, mses, plot_count = len(mses), title=regression_method+' MSE vs lambdas', x_title='log10(lambdas)', y_title='MSE',label=labels, filename="lasso_MSEvsLMB.pdf", multi_x=False)
 
 
