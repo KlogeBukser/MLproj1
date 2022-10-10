@@ -69,13 +69,14 @@ def ridge(polynomial_degree = 5):
 
     n_pol = polynomial_degree + 1
     poly_degs = np.arange(n_pol)
-    ridge_score, ols_score,k_ridge_score, k_ols_score = np.empty((4,n_pol))
+    ridge_score, ols_score,k_ridge_score, k_ols_score, k_score_lam = np.empty((5,n_pol))
 
 
     n_lambdas = 20
     lambdas = np.logspace(-4,4,n_lambdas)
-    polydeg_lam = [0,1,3,6,8]
+    polydeg_lam = [0,1,6]
     test_score_lam = np.empty((len(polydeg_lam),n_lambdas))
+    k_score_lam = np.empty((len(polydeg_lam),n_lambdas))
     deg_lamb = 0
 
 
@@ -100,20 +101,22 @@ def ridge(polynomial_degree = 5):
                 model.set_lambda(lamb)
                 pred, fit = model.bootstrap(x_test,n_boots)
                 test_score_lam[deg_lamb,i] = MSE(z_test,pred)
+                k_score_lam[deg_lamb,i] = model.cross_validate(6)
+
             deg_lamb += 1
 
 
 
-    plot_2D(np.log10(lambdas), test_score_lam, plot_count = 5, label = ['p = ' + str(i) for i in polydeg_lam],
-        title='Ridge' + " Test-MSE " + str(n**2) + ' points',x_title="$\lambda$",y_title="Error",filename= 'Ridge' + ' BiVa_boot.pdf', multi_x=False)
+    plot_2D(np.log10(lambdas), test_score_lam, plot_count = len(test_score_lam), label = ['p = ' + str(i) for i in polydeg_lam],
+        title='Ridge Test-MSE ' + str(n**2) + ' points',x_title='$\lambda$',y_title='Error',filename= 'Ridge MSE-lambda.pdf', multi_x=False)
+
+    plot_2D(np.log10(lambdas), k_score_lam, plot_count = len(k_score_lam), label = ['p = ' + str(i) for i in polydeg_lam],
+        title='Ridge F_fold-MSE ' + str(n**2) + ' points',x_title='$\lambda$',y_title='Error',filename= 'Ridge K_fold-lambda.pdf', multi_x=False)
 
 
-    plot_2D(poly_degs, [ridge_score,ols_score], plot_count = 2, label = ['Ridge','OLS'],
-        title='Ridge' + " OLS comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'Ridge' + ' BiVa_boot.pdf', multi_x=False)
+    plot_2D(poly_degs, [ridge_score,ols_score,k_ridge_score,k_ols_score], plot_count = 4, label = ['Ridge','OLS','Ridge predict','OLS predict'],
+        title='Ridge + OLS comparison with predictions using K-fold method' + ' OLS comparison ' + str(n**2) + ' points',x_title='polynomial degree',y_title='Error',filename= 'Ridge OLS compare Kfold.pdf', multi_x=False)
 
-
-    plot_2D(poly_degs, [k_ridge_score,k_ols_score], plot_count = 2, label = ['Ridge','OlS'],
-        title='Ridge' + " Kfold prediction for test error " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'ridge' + ' Kfold_test.pdf', multi_x=False)
 
 
 
@@ -173,7 +176,7 @@ def lasso(polynomial_degree = 5):
 
 
 # calls
-ols(8)
+#ols(8)
 ridge(8)
 # lasso(8)
 
