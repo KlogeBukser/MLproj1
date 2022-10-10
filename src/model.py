@@ -18,6 +18,10 @@ class Model:
         self.is_scaled = False
 
     def train(self,x,z):
+        """
+        Trains the model on given dataset
+        Makes design matrix and finds beta
+        """
         self.z_train = z
         self.X_train = self.design(x)
         self.beta = self.find_beta(self.X_train,self.z_train)
@@ -48,26 +52,26 @@ class Model:
         X_train = self.X_train
         X_test = self.design(x_test)
 
+        z_train = self.z_train
         z_pred = np.empty((X_test.shape[0],n_boots))
         z_fit = np.empty((X_train.shape[0],n_boots))
 
+        X_ = np.empty(X_train.shape)
+        z_ = np.empty(z_train.shape)
+
+        z_len = z_.shape[0]
+
         for i in range(n_boots):
-            X_, z_ = self.one_boot(X_train,self.z_train)
+            for s in range(z_len):
+                rand_int = np.random.randint(z_len)
+                X_[s,:] = X_train[rand_int,:]
+                z_[s] = z_train[rand_int]
+
             beta = self.find_beta(X_, z_).ravel()
-            z_pred[:,i] = np.dot(X_test, beta)
-            z_fit[:,i] = np.dot(X_train, beta)
+            z_pred[:,i] = X_test @ beta
+            z_fit[:,i] = X_train @ beta
 
         return z_pred, z_fit
-
-    def one_boot(self, X, z):
-        X_ = np.empty(X.shape)
-        z_ = np.empty(z.shape)
-        n_z = z_.shape[0]
-        for s in range(n_z):
-            r_int = np.random.randint(n_z)
-            X_[s,:] = X[r_int,:]
-            z_[s] = z[r_int]
-        return X_, z_
 
 
     def design(self,x):
@@ -174,7 +178,7 @@ class Ridge(Model):
 
         mat = sqr + lamb*np.eye(dim,dim)
 
-        if False:#np.linalg.det(mat):
+        if np.linalg.det(mat):
             inv = np.linalg.inv(mat)
 
         else:
@@ -207,7 +211,7 @@ class Ridge(Model):
         score = 10
         for lamb in lambdas:
             beta = self.find_beta(X, z, lamb)
-            if MSE(z,X @ beta) < score:#self.cmp_beta(X, z, beta, best_beta):
+            if MSE(z,X @ beta) < score:
                 best_beta = beta
                 best_lamb = lamb
                 score = MSE(z,X @ beta)
