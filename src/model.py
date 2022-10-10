@@ -86,7 +86,7 @@ class Model:
             self.design_mean, self.design_std = self.calc_scale(design)
             is_scaled = True
 
-        return design#(design - self.design_mean)*self.design_std
+        return (design - self.design_mean)*self.design_std
 
     def calc_scale(self,X):
         mean = np.array([0] + [np.mean(X[:,i]) for i in range(1,self.feature_count)])

@@ -19,7 +19,7 @@ n_boots = 20
 n = 20
 
 
-x, z = generate_data_Franke(n, noise = 0.8)
+x, z = generate_data_Franke(n, noise = 0.4)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 
 
@@ -69,7 +69,7 @@ def ridge(polynomial_degree = 5):
 
     n_pol = polynomial_degree + 1
     poly_degs = np.arange(n_pol)
-    ridge_score, ols_score, k_ols_score = np.empty((3,n_pol))
+    ridge_score, ols_score,k_ridge_score, k_ols_score = np.empty((4,n_pol))
 
 
     n_lambdas = 20
@@ -86,12 +86,13 @@ def ridge(polynomial_degree = 5):
 
         z_pred, z_fit = model.bootstrap(x_test,n_boots)
         ridge_score[deg] = MSE(z_test,z_pred)
-        #k_ridge_score[deg] = model.cross_validate(6)
+        k_ridge_score[deg] = model.cross_validate(6)
 
         model.set_lambda(0)
         z_pred, z_fit = model.bootstrap(x_test,n_boots)
         ols_score[deg] = MSE(z_test,z_pred)
         k_ols_score[deg] = model.cross_validate(6)
+
 
         if (deg in polydeg_lam):
 
@@ -102,6 +103,7 @@ def ridge(polynomial_degree = 5):
             deg_lamb += 1
 
 
+
     plot_2D(np.log10(lambdas), test_score_lam, plot_count = 5, label = ['p = ' + str(i) for i in polydeg_lam],
         title='Ridge' + " Test-MSE " + str(n**2) + ' points',x_title="$\lambda$",y_title="Error",filename= 'Ridge' + ' BiVa_boot.pdf', multi_x=False)
 
@@ -110,7 +112,7 @@ def ridge(polynomial_degree = 5):
         title='Ridge' + " OLS comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'Ridge' + ' BiVa_boot.pdf', multi_x=False)
 
 
-    plot_2D(poly_degs, [ridge_score,ols_score,k_ols_score], plot_count = 3, label = ['Ridge','OlS', 'K-OLS'],
+    plot_2D(poly_degs, [k_ridge_score,k_ols_score], plot_count = 2, label = ['Ridge','OlS'],
         title='Ridge' + " Kfold prediction for test error " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'ridge' + ' Kfold_test.pdf', multi_x=False)
 
 
