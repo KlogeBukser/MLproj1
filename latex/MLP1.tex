@@ -16,7 +16,6 @@
 % should be fine as it is
 \newcommand\vldbauthors{\authors}
 \newcommand\vldbtitle{\shorttitle} 
-% leave empty if no availability url should be set
 \newcommand\vldbavailabilityurl{URL_TO_YOUR_ARTIFACTS}
 % whether page numbers should be shown or not, use 'plain' for review versions, 'empty' for camera ready
 \newcommand\vldbpagestyle{plain} 
@@ -77,7 +76,8 @@ We'll discuss first the theory then the implementation of these methods in the c
 
 \section{Theory}
 In this section we'll  discuss both theory our implementations.
-\subsection{Cost Functions (Part (a))}
+\subsection{Part (a)}
+\label{sub:parta}
 Since by minimising $ {(y- \tilde y)}^2 $ we can approximate $ f(x) $ by $ \textbf{X} \boldsymbol{\beta}  $, and
 \[ \textbf{y} = f(x) + \epsilon \] where $ \epsilon $ is some normally distributed noise with $ \epsilon \sim \mathcal{N}(0,1)  $
 Then 
@@ -159,19 +159,22 @@ All three methods were based on...
 \section{Implementation and Code}
 In this section we discuss the structure of the code and the implementation of the above discussed algorithms with demonstrations, selected run in order to reproduce results.
 \subsection{Structure}
-
+The source code contains by general function used for, for example, plotting, generating data, calculating error/scores, etc., and a Model class and a daughter class Ridge. Where Model contains methods for find the design matrix, scaling, training data, resampling methods, computing beta (default using OLS) and in Ridge we've re-written the functions relevant for computing beta using Ridge regression. The other functions are then group into files with according to their use. 
 \subsection{Reproduce Results}
+To reproduce results for part b, c, and d, simply call 
+{\color{red} ols() } in main.py anywhere before line $ 173 $ for part e, or f, call {\color{red} ridge() } and {\color{red} lasso() } at the same location. For part g, call these functions again after line $ 190 $ to repeat the same analysis with the terrain data.
+
 
 \section{Results and Analysis}
-In this section we present our results and discuss the contexts and relate them to other relevant results.
+In this section we present our results and discuss the contexts and relate them to other relevant results, with chronological order.\\
+Part (a) is as in Section~\ref{sub:parta}.
 
-To analyse real life data, we used the two terrain data files provided in the project.
+To analyse real life data, we used the two terrain data files provided in the project. Since these files consist data from $ 3601 \times 1801 = 6485401$ data points, it's unwise to use all the data points for fitting 
 \subsection{Plots}
 \section{Conclusion}
 conclusions and perspectives
 discussion of pros and cons of methods and possible improvements.
 
-\section*{Theory}
 
 \section*{Appendix}
 
@@ -186,4 +189,4 @@ discussion of pros and cons of methods and possible improvements.
 
 \end{document}
 \endinput
-f
+
