@@ -6,6 +6,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 from poly_funcs import get_2D_pols
+from model import *
+from calculate import *
 
 from generate import *
 from produce_results import *
@@ -20,9 +22,6 @@ n = 20
 #polydeg = 8
 #n_pol = polydeg + 1
 
-# ols = False
-# ridge = True
-# lasso = False
 
 x, z = generate_data_Franke(n, noise = 0.8)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
@@ -35,7 +34,6 @@ def ols(polynomial_degree = 5):
     n_pol = polynomial_degree + 1
     poly_degs = np.arange(n_pol)
     test_score, train_score, bias, var, Kfold_score = np.empty((5,n_pol))
-
 
     n_simple = np.min((6,n_pol))
     simple_degs = np.arange(n_simple)
@@ -77,7 +75,6 @@ def ols(polynomial_degree = 5):
     plot_2D(beta_ranges, betas, plot_count = len(betas), title='ols' + " beta " + str(n**2) + ' points',x_title="features",y_title="Beta",filename= 'ols' + ' beta.pdf')
 
 
-
     plot_2D(poly_degs, [test_score,bias,var], plot_count = 3, label = ['MSE','bias','variance'],
         title='ols' + " Bias-Variance " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'ols' + ' BiVa_boot.pdf', multi_x=False)
 
@@ -88,42 +85,49 @@ def ols(polynomial_degree = 5):
         title='ols' + " Kfold prediction for test error " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'ols' + ' Kfold_test.pdf', multi_x=False)
 
 
-def ridge():
-    models = []
+def ridge(polynomial_degree = 5):
+
+    n_pol = polynomial_degree + 1
+    poly_degs = np.arange(n_pol)
+    ridge_score, ols_score, k_score = np.empty((3,n_pol))
 
 
-    for deg in range(n_pol):
-        models.append(Ridge(deg))
-        models[deg].train(x_train,z_train,'best')
-
-    #plot_ridge(n,models,x_test,z_test,n_boots)
-    pred,fit = make_predictions_boot(models,x_test,n_boots)
-    MSE_test = find_test_MSE(z_test, pred)
-    MSE_Kfold = find_MSE_Kfold(models, folds = 6)
-
-
-    ols_z_pred, ols_z_fit = make_predictions_boot(models,x_test,n_boots)
-    MSE_boot = find_MSE_boot(z_train, z_test, ols_z_pred, ols_z_fit)
-    MSE_Kfold = find_MSE_Kfold(models, folds = 6)
-
-    plot_MSE_resampling(n,MSE_boot,MSE_Kfold,'ridge')
-
-    return
     n_lambdas = 20
     lambdas = np.logspace(-4,4,n_lambdas)
-    test_score = np.empty((n_pol,n_lambdas))
-    train_score = np.empty((n_pol,n_lambdas))
+    test_score_lam = np.empty((n_pol,n_lambdas))
 
-    for i,lamb in enumerate(lambdas):
-        for model in models:
+    for deg in poly_degs:
+
+        model = Ridge(deg)
+        model.train(x_train,z_train,'best')
+
+        z_pred, z_fit = model.bootstrap(x_test,n_boots)
+        ridge_score[deg] = MSE(z_test,z_pred)
+
+        model.set_lambda(0)
+        z_pred, z_fit = model.bootstrap(x_test,n_boots)
+        ols_score[deg] = MSE(z_test,z_pred)
+        k_score[deg] = model.cross_validate(6)
+
+
+        for i,lamb in enumerate(lambdas):
             model.set_lambda(lamb)
 
-        pred, fit = make_predictions_boot(models,x_test,n_boots)
-        scores = find_MSE_boot(z_train,z_test, pred, fit)
-        test_score[:,i] = scores['test']
-        train_score[:,i] = scores['train']
+            pred, fit = model.bootstrap(x_test,n_boots)
+            test_score_lam[deg,i] = MSE(z_test,pred)
 
-    plot_MSE_lambda(n,test_score,lambdas)
+
+    plot_2D(np.log10(lambdas), test_score_lam, plot_count = test_score_lam.shape[0], label = ['|p(x)| = ' + str(deg) for deg in poly_degs],
+        title='Ridge' + " Test-MSE " + str(n**2) + ' points',x_title="$\lambda$",y_title="Error",filename= 'Ridge' + ' BiVa_boot.pdf', multi_x=False)
+
+
+    plot_2D(poly_degs, [ridge_score,ols_score], plot_count = 2, label = ['Ridge','OLS'],
+        title='Ridge' + " OLS comparison " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'Ridge' + ' BiVa_boot.pdf', multi_x=False)
+
+
+    plot_2D(poly_degs, [ridge_score,ols_score,k_score], plot_count = 3, label = ['Ridge','OlS', 'K-fold'],
+        title='Ridge' + " Kfold prediction for test error " + str(n**2) + ' points',x_title="polynomial degree",y_title="Error",filename= 'ridge' + ' Kfold_test.pdf', multi_x=False)
+
 
 
 def lasso():
@@ -180,12 +184,12 @@ def lasso():
 
 # calls
 ols(8)
-# ridge()
+ridge(8)
 # lasso()
 
 # part g
 # TODO: renaming the plotting files
-terrain_datas = ['SRTM_data_Norway_1.tif', 'SRTM_data_Norway_2.tif']
+"""terrain_datas = ['SRTM_data_Norway_1.tif', 'SRTM_data_Norway_2.tif']
 x_size = 20
 y_size = 20
 for terrain_data in terrain_datas:
@@ -199,4 +203,4 @@ for terrain_data in terrain_datas:
 
     ols()
     # ridge()
-    # lasso()
+    # lasso()"""
