@@ -24,7 +24,7 @@ n_boots = 20
 n = 20
 
 
-x, z = generate_data_Franke(n, noise = 0.8)
+x, z = generate_data_Franke(n, noise = 0.2)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 is_terrain = False
 
@@ -237,7 +237,7 @@ def lasso(polynomial_degree = 5):
 
 
 # calls
-ols(5)
+ols(8)
 # ridge(8)
 # lasso(8)
 
