@@ -49,6 +49,7 @@ class Model:
         :returns: 2D array_like, 2D array_like
 
         """
+
         X_train = self.X_train
         X_test = self.design(x_test)
 
@@ -61,6 +62,7 @@ class Model:
 
         z_len = z_.shape[0]
 
+        # select random points
         for i in range(n_boots):
             for s in range(z_len):
                 rand_int = np.random.randint(z_len)
@@ -84,7 +86,7 @@ class Model:
 
         if not self.is_scaled:
             self.design_mean, self.design_std = self.calc_scale(design)
-            is_scaled = True
+            is_scaled = True    #  only scale once 
 
         return (design - self.design_mean)*self.design_std
 
@@ -117,6 +119,8 @@ class Model:
 
 
         for i in range(k):
+
+            # generate indices
             test_indices = folds.pop(0)
             train_indices = [elem for fold in folds for elem in fold]
 
