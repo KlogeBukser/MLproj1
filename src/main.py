@@ -24,7 +24,7 @@ n_boots = 20
 n = 20
 
 
-x, z = generate_data_Franke(n, noise = 0.2)
+x, z = generate_data_Franke(n, noise = 0.8)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
 is_terrain = False
 
@@ -134,10 +134,10 @@ def ridge(polynomial_degree = 5):
 
 
     plot_2D(np.log10(lambdas), test_score_lam, plot_count = len(test_score_lam), label = ['p = ' + str(i) for i in polydeg_lam],
-        title='Ridge Test-MSE ' + str(n**2) + ' points',x_title='$\lambda$',y_title='Error',filename= 'Ridge MSE-lambda.pdf', multi_x=False, file_dir=file_dir)
+        title='Ridge Test-MSE ' + str(n**2) + ' points',x_title='$log10(\lambda)$',y_title='Error',filename= 'Ridge MSE-lambda.pdf', multi_x=False, file_dir=file_dir)
 
     plot_2D(np.log10(lambdas), k_score_lam, plot_count = len(k_score_lam), label = ['p = ' + str(i) for i in polydeg_lam],
-        title='Ridge F_fold-MSE ' + str(n**2) + ' points',x_title='$\lambda$',y_title='Error',filename= 'Ridge K_fold-lambda.pdf', multi_x=False, file_dir=file_dir)
+        title='Ridge F_fold-MSE ' + str(n**2) + ' points',x_title='$log10(\lambda)$',y_title='Error',filename= 'Ridge K_fold-lambda.pdf', multi_x=False, file_dir=file_dir)
 
 
     plot_2D(poly_degs, [ridge_score,ols_score,k_ridge_score,k_ols_score], plot_count = 4, label = ['Ridge','OLS','Ridge predict','OLS predict'],
@@ -237,9 +237,9 @@ def lasso(polynomial_degree = 5):
 
 
 # calls
-ols(8)
-# ridge(8)
-# lasso(8)
+# ols(8)
+ridge(8)
+lasso(8)
 
 # part g
 is_terrain = True

@@ -25,6 +25,7 @@ def plot_simple_scores(n,MSE_vals,R2_vals, file_dir):
 
 
 def plot_boot_scores(n,poly_degs,test_score,train_score,bias,var,Kfold_score, file_dir):
+    
 
     plot_2D(poly_degs, [test_score,bias,var], plot_count = 3, label = ['MSE','bias','variance'],
         title='ols Bias-Variance ' + str(n**2) + ' points',x_title='polynomial degree',y_title='Error',filename= 'ols BiVa_boot.pdf', multi_x=False,file_dir=file_dir)
@@ -40,4 +41,4 @@ def plot_boot_scores(n,poly_degs,test_score,train_score,bias,var,Kfold_score, fi
 def plot_lmb_MSE(lmbs, mses, regression_method, labels, filename, file_dir):
 
     '''plot MSE vs lambdas for lasso'''
-    plot_2D(lmbs, mses, plot_count = len(mses), title=regression_method+' MSE vs lambdas', x_title='log10(lambdas)', y_title='MSE',label=labels, filename=filename, multi_x=False,file_dir=file_dir)
+    plot_2D(lmbs, mses, plot_count = len(mses), title=regression_method+' MSE vs $\lambda$', x_title='$log10(\lambda)$', y_title='MSE',label=labels, filename=filename, multi_x=False,file_dir=file_dir)
