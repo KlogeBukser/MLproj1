@@ -238,11 +238,10 @@ def lasso(polynomial_degree = 5):
 
 # calls
 ols(5)
-ridge(8)
-lasso(8)
+# ridge(8)
+# lasso(8)
 
 # part g
-# TODO: renaming the plotting files
 is_terrain = True
 
 terrain_datas = ['SRTM_data_Norway_1.tif']
