@@ -1,31 +1,46 @@
 import numpy as np
 import pandas as pd
+
 from sklearn.model_selection import train_test_split
 from sklearn import linear_model
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import KFold, cross_val_score
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.utils import resample
+
 
 from poly_funcs import get_2D_pols
 from model import *
 from calculate import *
+from plotting import *
 
 from generate import *
 from produce_results import *
 
 np.random.seed(1)
 
-
 n_boots = 20
 n = 20
 
 
-x, z = generate_data_Franke(n, noise = 0.4)
+x, z = generate_data_Franke(n, noise = 0.2)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
+
+
+is_terrain = False
 
 
 
 def ols(polynomial_degree = 5):
+
+
     # Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
+
+    if is_terrain:
+        file_dir = 'terrain plots'
+    else:
+        file_dir = 'plots'
 
     n_pol = polynomial_degree + 1
     poly_degs = np.arange(n_pol)
@@ -40,6 +55,7 @@ def ols(polynomial_degree = 5):
 
         model = Model(deg)
         model.train(x_train,z_train)
+        z_pred_train = model.predict(x_train)
 
         z_pred, z_fit = model.bootstrap(x_test,n_boots)
 
@@ -57,15 +73,34 @@ def ols(polynomial_degree = 5):
             simple_MSE[deg] = MSE(z_test,z_pred_simple)
             simple_R2[deg] = R2(z_test,z_pred_simple)
 
+
+    # # Plots franke
+    # xp = np.arange(0,1,1/n)
+    # x, y = np.meshgrid(xp,xp)
+    # zp = FrankeFunction(x,y)
+    # print(zp.shape)
+    # plot_surface(x,y,zp)
+
+    # # Plot z_pred
+    # print(x_train)
+    # print(z_pred_train.shape)
+    # print(x_train.shape)
+    # plot_surface(x_train[:,0],x_train[:,1],z_pred_train, title="z_pred on train",x_title='x',y_title='y',z_title='z',filename='z_pred on train')
+    
     # Plots Beta
-    plot_beta(n,betas)
+    plot_beta(n,betas, file_dir=file_dir)
     # Plots MSE + R2
-    plot_simple_scores(n,simple_MSE,simple_R2)
+    plot_simple_scores(n,simple_MSE,simple_R2, file_dir=file_dir)
     # Plots KFold, bias/variance, test/train comparison
-    plot_boot_scores(n,poly_degs,test_score,train_score,bias,var,Kfold_score)
+    plot_boot_scores(n,poly_degs,test_score,train_score,bias,var,Kfold_score, file_dir=file_dir)
 
 
 def ridge(polynomial_degree = 5):
+
+    if is_terrain:
+        file_dir = 'terrain plots'
+    else:
+        file_dir = 'plots'
 
     n_pol = polynomial_degree + 1
     poly_degs = np.arange(n_pol)
@@ -95,7 +130,7 @@ def ridge(polynomial_degree = 5):
         k_ols_score[deg] = model.cross_validate(6)
 
 
-        if (deg in polydeg_lam):
+        if deg in polydeg_lam:
 
             for i,lamb in enumerate(lambdas):
                 model.set_lambda(lamb)
@@ -108,20 +143,26 @@ def ridge(polynomial_degree = 5):
 
 
     plot_2D(np.log10(lambdas), test_score_lam, plot_count = len(test_score_lam), label = ['p = ' + str(i) for i in polydeg_lam],
-        title='Ridge Test-MSE ' + str(n**2) + ' points',x_title='$\lambda$',y_title='Error',filename= 'Ridge MSE-lambda.pdf', multi_x=False)
+        title='Ridge Test-MSE ' + str(n**2) + ' points',x_title='$\lambda$',y_title='Error',filename= 'Ridge MSE-lambda.pdf', multi_x=False, file_dir=file_dir)
 
     plot_2D(np.log10(lambdas), k_score_lam, plot_count = len(k_score_lam), label = ['p = ' + str(i) for i in polydeg_lam],
-        title='Ridge F_fold-MSE ' + str(n**2) + ' points',x_title='$\lambda$',y_title='Error',filename= 'Ridge K_fold-lambda.pdf', multi_x=False)
+        title='Ridge F_fold-MSE ' + str(n**2) + ' points',x_title='$\lambda$',y_title='Error',filename= 'Ridge K_fold-lambda.pdf', multi_x=False, file_dir=file_dir)
 
 
     plot_2D(poly_degs, [ridge_score,ols_score,k_ridge_score,k_ols_score], plot_count = 4, label = ['Ridge','OLS','Ridge predict','OLS predict'],
-        title='Ridge + OLS comparison with predictions using K-fold method' + ' OLS comparison ' + str(n**2) + ' points',x_title='polynomial degree',y_title='Error',filename= 'Ridge OLS compare Kfold.pdf', multi_x=False)
+        title='Ridge + OLS comparison with predictions using K-fold method' + ' OLS comparison ' + str(n**2) + ' points',x_title='polynomial degree',y_title='Error',filename= 'Ridge OLS compare Kfold.pdf', multi_x=False, file_dir=file_dir)
 
 
 
 
 def lasso(polynomial_degree = 5):
 
+
+    if is_terrain:
+        file_dir = 'terrain plots'
+    else:
+        file_dir = 'plots'
+        
     n_pol = polynomial_degree + 1
     poly_degs = np.arange(n_pol)
 
@@ -129,59 +170,89 @@ def lasso(polynomial_degree = 5):
     lambdas = np.logspace(-4, 4, nlambdas)
 
     # for plotting
-    mses = []
-    mses_train = []
+    mses_k = []
+    mses_train_k = []
+    mses_b = []
+    mses_train_b = []
     labels = []
 
-    # get design matrix
+    # # bootstrap
+    # bs = cross_validation.Bootstrap(9, random_state=0)
+
+    # cross validation
+    k = 5
+    kfold = KFold(n_splits = k)
+
+    n_boostraps = 20
 
     for deg in poly_degs:
-        functions = get_2D_pols(deg)
-        func_count = len(functions)
 
-        n = x_train.shape[0]
-        X = np.ones((n, func_count))
-        for i in range(n):
-            for j in range(func_count):
-                X[i,j] = functions[j](x_train[i])
+        poly = PolynomialFeatures(degree = deg)
 
-        n_test = x_test.shape[0]
-        X_test = np.ones((n_test, func_count))
-        for i in range(n_test):
-            for j in range(func_count):
-                X[i,j] = functions[j](x_test[i])
+        X = poly.fit_transform(x_train)
+        X_test = poly.fit_transform(x_test)
 
         # will scale data with StandardScaler
 
-        mse = np.zeros(nlambdas)
-        mse_train = np.zeros(nlambdas)
+        mse_k = np.zeros(nlambdas)
+        mse_train_k = np.zeros(nlambdas)
+
+        mse_avg_b = np.zeros(nlambdas)
+        mse_train_b = np.zeros(nlambdas)
+
 
         for i in range(nlambdas):
             lmb = lambdas[i]
 
             reg_lasso = make_pipeline(StandardScaler(with_mean=False), linear_model.Lasso(lmb))
+
+            # bootstrap
+            mse_boot = np.zeros(n_boostraps)
+            for j in range(n_boostraps):
+                x_, z_ = resample(x_train, z_train)
+                X_ = poly.fit_transform(x_)
+                reg_lasso.fit(X_,z_)
+                
+                z_boot_pred = reg_lasso.predict(X_test)
+                mse_boot[j] = MSE(z_test, z_boot_pred)
+
+            mse_avg_b[i] = np.mean(mse_boot)
+
+            # cross val
+
             reg_lasso.fit(X,z_train)
-            z_pred = reg_lasso.predict(X)
-            z_pred_test = reg_lasso.predict(X_test)
+            cvs_train = cross_val_score(reg_lasso, X, z_train, scoring='neg_mean_squared_error', cv=kfold)
+            mse_train_k[i] = np.mean(-cvs_train)
 
-            mse[i] = MSE(z_test,z_pred_test)
-            mse_train[i] = MSE(z_train,z_pred)
+            cvs_test = cross_val_score(reg_lasso, X_test, z_test, scoring='neg_mean_squared_error', cv=kfold)
+            mse_k[i] = np.mean(-cvs_test)
 
-        mses.append(mse)
-        mses_train.append(mse_train)
+        mses_b.append(mse_avg_b)
+
+        mses_k.append(mse_k)
+        mses_train_k.append(mse_train_k)
         labels.append('n = ' + str(deg))
 
-    plot_lmb_MSE(np.log10(lambdas), mses, 'lasso', labels)
-    plot_lmb_MSE(np.log10(lambdas), mses_train, 'lasso training', labels)
+
+    # only plotting every second polynomial degree because there are too many
+    # bootstrap
+    plot_lmb_MSE(np.log10(lambdas), mses_b[::2], 'lasso with bootstrap', labels[::2], filename="lasso bootstrap", file_dir=file_dir)
+
+    # k-fold
+    # plot_lmb_MSE(np.log10(lambdas), mses_train_k, 'lasso on train with k-fold', labels)
+    plot_lmb_MSE(np.log10(lambdas), mses_k[::2], 'lasso with k-fold', labels[::2], filename="lasso k-fold", file_dir=file_dir)
+    
 
 
 # calls
-#ols(8)
-ridge(8)
+ols(5)
+# ridge(8)
 # lasso(8)
 
 # part g
 # TODO: renaming the plotting files
+is_terrain = True
+
 terrain_datas = ['SRTM_data_Norway_1.tif', 'SRTM_data_Norway_2.tif']
 x_size = 20
 y_size = 20
@@ -194,6 +265,7 @@ for terrain_data in terrain_datas:
     # print(terrain.shape)
     x_train, x_test, z_train, z_test = train_test_split(xy,terrain)
 
-    ols(8)
+    # it will overwrite the other plots
+    ols(5)
     # ridge(8)
     # lasso(8)

@@ -25,8 +25,8 @@ def set_paras(x_title,y_title,title=None,filename=None,file_dir='plots',has_labe
     if filename:
         full_path = os.path.join(file_dir, filename)
         plt.savefig(full_path)
-        # plt.close()
-        plt.show() #for testing
+        plt.close()
+        # plt.show() #for testing
     else:
         plt.show()
 
