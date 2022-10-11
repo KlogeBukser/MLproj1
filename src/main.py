@@ -24,10 +24,8 @@ n_boots = 20
 n = 20
 
 
-x, z = generate_data_Franke(n, noise = 0.2)
+x, z = generate_data_Franke(n, noise = 0.8)
 x_train, x_test, z_train, z_test = train_test_split(x,z)
-
-
 is_terrain = False
 
 
@@ -37,12 +35,15 @@ def ols(polynomial_degree = 5):
 
     # Makes models for each polynomial degree, and feeds them the testing data (x_test) for predictions
 
+    # puts plot in another the terrain plots files
     if is_terrain:
         file_dir = 'terrain plots'
     else:
         file_dir = 'plots'
 
-    n_pol = polynomial_degree + 1
+    n_pol = polynomial_degree + 1 # since the first polynomial degree is 0
+
+
     poly_degs = np.arange(n_pol)
     test_score, train_score, bias, var, Kfold_score = np.empty((5,n_pol))
 
@@ -52,6 +53,8 @@ def ols(polynomial_degree = 5):
     betas = []
 
     for deg in poly_degs:
+
+        # trainning model for each polynomial degree
 
         model = Model(deg)
         model.train(x_train,z_train)
@@ -74,23 +77,11 @@ def ols(polynomial_degree = 5):
             simple_R2[deg] = R2(z_test,z_pred_simple)
 
 
-    # # Plots franke
-    # xp = np.arange(0,1,1/n)
-    # x, y = np.meshgrid(xp,xp)
-    # zp = FrankeFunction(x,y)
-    # print(zp.shape)
-    # plot_surface(x,y,zp)
-
-    # # Plot z_pred
-    # print(x_train)
-    # print(z_pred_train.shape)
-    # print(x_train.shape)
-    # plot_surface(x_train[:,0],x_train[:,1],z_pred_train, title="z_pred on train",x_title='x',y_title='y',z_title='z',filename='z_pred on train')
-    
     # Plots Beta
     plot_beta(n,betas, file_dir=file_dir)
     # Plots MSE + R2
     plot_simple_scores(n,simple_MSE,simple_R2, file_dir=file_dir)
+
     # Plots KFold, bias/variance, test/train comparison
     plot_boot_scores(n,poly_degs,test_score,train_score,bias,var,Kfold_score, file_dir=file_dir)
 
@@ -109,7 +100,7 @@ def ridge(polynomial_degree = 5):
 
     n_lambdas = 20
     lambdas = np.logspace(-4,4,n_lambdas)
-    polydeg_lam = [0,1,6]
+    polydeg_lam = [0,1,2,5,6,7,8]
     test_score_lam = np.empty((len(polydeg_lam),n_lambdas))
     k_score_lam = np.empty((len(polydeg_lam),n_lambdas))
     deg_lamb = 0
@@ -162,7 +153,7 @@ def lasso(polynomial_degree = 5):
         file_dir = 'terrain plots'
     else:
         file_dir = 'plots'
-        
+
     n_pol = polynomial_degree + 1
     poly_degs = np.arange(n_pol)
 
@@ -204,7 +195,8 @@ def lasso(polynomial_degree = 5):
         for i in range(nlambdas):
             lmb = lambdas[i]
 
-            reg_lasso = make_pipeline(StandardScaler(with_mean=False), linear_model.Lasso(lmb))
+            reg_lasso = linear_model.Lasso(lmb)
+            # make_pipeline(StandardScaler(with_mean=False), linear_model.Lasso(lmb))
 
             # bootstrap
             mse_boot = np.zeros(n_boostraps)
@@ -236,36 +228,35 @@ def lasso(polynomial_degree = 5):
 
     # only plotting every second polynomial degree because there are too many
     # bootstrap
-    plot_lmb_MSE(np.log10(lambdas), mses_b[::2], 'lasso with bootstrap', labels[::2], filename="lasso bootstrap", file_dir=file_dir)
+    plot_lmb_MSE(np.log10(lambdas), mses_b[::2], 'lasso with bootstrap', labels[::2], filename="lasso bootstrap.pdf", file_dir=file_dir)
 
     # k-fold
     # plot_lmb_MSE(np.log10(lambdas), mses_train_k, 'lasso on train with k-fold', labels)
-    plot_lmb_MSE(np.log10(lambdas), mses_k[::2], 'lasso with k-fold', labels[::2], filename="lasso k-fold", file_dir=file_dir)
+    plot_lmb_MSE(np.log10(lambdas), mses_k[::2], 'lasso with k-fold', labels[::2], filename="lasso k-fold.pdf", file_dir=file_dir)
     
 
 
 # calls
 ols(5)
-# ridge(8)
-# lasso(8)
+ridge(8)
+lasso(8)
 
 # part g
 # TODO: renaming the plotting files
 is_terrain = True
 
-terrain_datas = ['SRTM_data_Norway_1.tif', 'SRTM_data_Norway_2.tif']
-x_size = 20
-y_size = 20
+terrain_datas = ['SRTM_data_Norway_1.tif']
+
+# we want to cut out part of data as the data file contains way too many points
+x_size = n
+y_size = n
+
 for terrain_data in terrain_datas:
 
     xy,terrain = prep_terrain(terrain_data,x_size, y_size)
 
-    # print(xy,terrain)
-    # print(xy.shape)
-    # print(terrain.shape)
     x_train, x_test, z_train, z_test = train_test_split(xy,terrain)
 
-    # it will overwrite the other plots
-    ols(5)
+    # ols(8)
     # ridge(8)
-    # lasso(8)
+    # lasso(6)
